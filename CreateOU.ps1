@@ -1,4 +1,4 @@
-﻿<#-----------------------------
+<#-----------------------------
 Overview.
     Deploy multiple Domain Controllers and a new Forest from the JSON file input
     
@@ -386,7 +386,7 @@ Function Delegate_FullControl
     $ouACL.AddAccessRule($ACE)
     Set-Acl -Path $OU -AclObject $ouACL
 
-    $ActiveDirectoryRights = [System.DirectoryServices.ActiveDirectoryRights]::CreateChild
+    $ActiveDirectoryRights = [System.DirectoryServices.ActiveDirectoryRights]::GenericAll
     $AccessControlType = [System.Security.AccessControl.AccessControlType]::Allow
     $ObjectType = [guid] "00000000-0000-0000-0000-000000000000"
     $InheritanceType = [System.DirectoryServices.ActiveDirectorySecurityInheritance]::SelfAndChildren
@@ -396,7 +396,7 @@ Function Delegate_FullControl
     $ouACL.AddAccessRule($ACE)
     Set-Acl -Path $OU -AclObject $ouACL
 
-    $ActiveDirectoryRights = [System.DirectoryServices.ActiveDirectoryRights]::DeleteChild
+    $ActiveDirectoryRights = [System.DirectoryServices.ActiveDirectoryRights]::GenericAll
     $AccessControlType = [System.Security.AccessControl.AccessControlType]::Allow
     $ObjectType = [guid] "00000000-0000-0000-0000-000000000000"
     $InheritanceType = [System.DirectoryServices.ActiveDirectorySecurityInheritance]::SelfAndChildren
@@ -526,6 +526,92 @@ function CreateOU-SrvMgmt
                 }
             }
 
+function ADGroup_ManagedServerResources 
+{                    
+    #Create nested groups Domain Global into Domain Local and attach Domain Local to the object
+    #AL AG_Managed Resources_OU_FullCtrl
+
+    #Group Acl and Description
+    $del_OU_Full_Acl = "FullCtrl","Full Control of all OU objects"
+    $del_OU_Computer_Acl = "CompMgmt","Manage Computer Objects"
+    $del_OU_Group_Acl = "GroupMgmt","Manage Group objects"
+    $del_OU_User_Acl = "UserMgmt","Manage User objects"
+    $del_OU_Service_Acl = "SvcMgmt","Manage Service Accounts"
+    $del_GPO_Edit_Acl = "GPOedit","Edit Group Policy Objects"
+    $del_ResGrp_Admin = "ResGrpAdmin","Local Administrative access"
+    $del_ResGrp_User = "ResGrpUser","Local User access"
+
+    #Group Descriptions
+    $del_OU_Description = "Members of this group have $($del_OU_Full_Acl.split(",")[1])"
+
+    #Local and Global
+    $del_DomainLocal = "AL_"
+    $del_DomainGlobal = "AG_"
+    $del_Group = $del_DomainLocal,$del_DomainGlobal
+
+    #New Group
+    $new_GroupName=@()   
+
+    foreach ($del_grp in $del_Group)
+        {
+        
+        if ($ManSrvChoice -match "Managed")
+            {
+                $adTasksDestination = "OU=AD Tasks,$($ouMgmtResDN)"
+
+                $del_GroupName = "$($del_grp)OU_$($ouOrgName)_$($ouMgmdRes)_$($del_OU_Full_Acl.split(",")[0])"
+            }
+        elseif ($ManSrvChoice -match "Server")
+            {
+                $adTasksDestination = "OU=AD Tasks,$($ouMgmtResDN)" 
+
+                $del_GroupName = "$($del_grp)OU_$($ouOrgName)_$($ouSvrRes)_$($del_OU_Full_Acl.split(",")[0])"
+            }
+        
+        #Create new AD Groups
+        if ($del_GroupName -like "$del_DomainGlobal*")
+            {
+                New-ADGroup -Name $del_GroupName –groupscope Global -Path $adTasksDestination -Description $del_OU_Description 
+                
+              #  $ou=@()
+              #  $groupName=@()
+
+              #  $ou = $ouMgmtResDN 
+              #  $groupName = $del_GroupName
+              #  Delegate_FullControl($ou,$GroupName)             
+            }
+        elseif ($del_GroupName -like "$del_DomainLocal*")
+            {
+                New-ADGroup -Name $del_GroupName –groupscope DomainLocal -Path $adTasksDestination -Description $del_OU_Description  
+                
+                #$get_GroupName = Get-ADGroup $del_GroupName
+                #$get_GroupName_Sid = $get_GroupName.SID.Value
+                $ou=@()
+                $groupName=@()
+
+                if ($del_GroupName -match "Server Resources"){$ou = $ouSvrResDN}
+                elseif ($del_GroupName -match "Managed Resources"){$ou = $ouMgmtResDN}
+                $groupName = $del_GroupName
+                Delegate_FullControl($ou,$GroupName)
+                
+                             
+            } 
+                        
+        $new_GroupName+=$del_GroupName -join ","               
+    }
+
+    #Nest groups
+    try
+        {                
+            Add-ADGroupMember $new_GroupName[0] $new_GroupName[1]
+        }
+    catch
+        {
+            Add-ADGroupMember $new_GroupName[1] $new_GroupName[0]
+        }
+}
+
+
 <#-----------------------------
 
 Declare Domain variables
@@ -616,7 +702,6 @@ Managed Resources
 
 -----------------------------#>
                 $ouMgmtRtItems = $ouMgmtRoot.split(",")
-
                 #Create Management OU's Managed Resources
                 foreach ($ouMgmdRes in $ouMgmtRtItems[0])
                 {
@@ -645,51 +730,10 @@ Managed Resources
                             $gtouMgmtResOuDN = try {Get-ADOrganizationalUnit $ouMgmtResOUDN -ErrorAction SilentlyContinue} catch {}
                             CreateOU-MgmtResMgmt($ouMgmtResOU,$ouMgmtResDN,$ouProtect)
                         }
-                    #Create nested groups Domain Global into Domain Local and attach Domain Local to the object
-                    #AL AG_Managed Resources_OU_FullCtrl
-
-                    #Group Acl and Description
-                    $del_OU_Full_Acl = "FullCtrl","Full Control of all OU objects"
-                    $del_OU_Computer_Acl = "CompMgmt","Manage Computer Objects"
-                    $del_OU_Group_Acl = "GroupMgmt","Manage Group objects"
-                    $del_OU_User_Acl = "UserMgmt","Manage User objects"
-                    $del_OU_Service_Acl = "SvcMgmt","Manage Service Accounts"
-                    $del_GPO_Edit_Acl = "GPOedit","Edit Group Policy Objects"
-                    $del_ResGrp_Admin = "ResGrpAdmin","Local Administrative access"
-                    $del_ResGrp_User = "ResGrpUser","Local User access"
-
-                    #Group Descriptions
-                    $del_OU_Description = "Members of this group have $($del_OU_Full_Acl.split(",")[1])"
-
-                    #Local and Global
-
-                    $del_DomainLocal = "AL_"
-                    $del_DomainGlobal = "AG_"
-                    $del_Group = $del_DomainLocal,$del_DomainGlobal
-
-                    #New Group
-
-                    foreach ($del_grp in $del_Group)
-                    {
-                        $del_GroupName = "$($del_grp)OU_$($ouMgmdRes)_$($del_OU_Full_Acl.split(",")[0])"
-
-                        if ($del_GroupName -like "$del_DomainGlobal*")
-                        {
-                            New-ADGroup -Name $del_GroupName –groupscope Global -Path $ouMgmtResOuDN -Description $del_OU_Description               
-                        }
-                        elseif ($del_GroupName -like "$del_DomainLocal*")
-                        {
-                            New-ADGroup -Name $del_GroupName –groupscope DomainLocal -Path $ouMgmtResOuDN -Description $del_OU_Description               
-                        }
                     
-                    }
-
-                    #Nest Groups for best MS Practice
-                    Add-ADGroupMember "AL__OU_Managed Resources_FullCtrl" -Members "AG__OU_Managed Resources_FullCtrl"
-
-
-
-                    
+                    #Function Create Grouos for Managed Resources OU
+                    $ManSrvChoice = "Managed"
+                    ADGroup_ManagedServerResources($ManSrvChoice)  
 
                 }
 <#-----------------------------
@@ -711,6 +755,9 @@ Server Resources
               
                     #select the Server Resources to create sub-OUs
                     $ouSvrResDN = "OU=$($ouSvrRes),$($ouOrgNameDN)"
+
+                    $ManSrvChoice = "Server"
+                    ADGroup_ManagedServerResources($ManSrvChoice) 
 
                     $ouCompSplit = $ouComp.split(",")
                     foreach ($ouCompItem in $ouCompSplit)
@@ -737,6 +784,8 @@ Server Resources
                             $ouSvrResMgmtDN = "OU=$($ouSrvResOU),$($ouSrvResCompDN)"
                             $gtouSvrResMgmtDN = try {Get-ADOrganizationalUnit $ouSvrResMgmtDN -ErrorAction SilentlyContinue} catch {}
                             CreateOU-SrvMgmt($ouSrvResOU,$ouSrvResCompDN,$ouProtect)
+
+                            
                         }
                     }
                 }
