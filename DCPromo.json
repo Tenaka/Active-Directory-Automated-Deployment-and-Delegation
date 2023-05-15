@@ -1,0 +1,127 @@
+﻿{
+    "FirstDC":
+        {
+        "PDCName":"WIN-VUS9M7QLHPN",
+        "PDCRole":"true",
+        "IPAddress":"10.0.0.1",
+        "Subnet":"255.255.255.0",
+        "DefaultGateway":"10.0.0.254",
+        "CreateDnsDelegation":"false", 
+        "DatabasePath":"c:\\Windows\\NTDS", 
+        "DomainMode":"WinThreshold", 
+        "DomainName":"testdom.loc", 
+        "DomainNetbiosName":"TESTDOM", 
+        "ForestMode":"WinThreshold", 
+        "InstallDns":"true", 
+        "LogPath":"c:\\Windows\\NTDS", 
+        "NoRebootOnCompletion":"false", 
+        "SysvolPath":"c:\\Windows\\SYSVOL", 
+        "Force":"true",
+        "DRSM":"Password1234",
+        "DomAcct":"Administrator",
+        "DomPwd":"Password1234",
+        "PromptPw":"false"
+        },
+    "SubDCs":
+        {
+        "PDCRole":"false",
+        "NoGlobalCatalog":"false",
+        "Credential":"Password1234",
+        "CriticalReplicationOnly":"false",
+        "Networking":[
+            {
+                "DCName":"DC02",
+                "PDCRole":"false",
+                "IPAddress":"10.0.0.2",
+                "Subnet":"255.255.255.0",
+                "DefaultGateway":"10.0.0.254", 
+                "SiteName":"Default-First-Site-Name",
+                "DRSM":"Password1234"      
+            },
+            {
+                "DCName":"DC03",
+                "PDCRole":"false",
+                "IPAddress":"10.0.0.3",
+                "Subnet":"255.255.255.0",
+                "DefaultGateway":"10.0.0.254",
+                "SiteName":"Default-First-Site-Name",
+                "DRSM":"Password1234"
+            }  
+                  ]
+        },
+       "OU":
+       {
+        "Dept1":
+            {
+            "Name":"Dept1",
+            "Path":"Root",
+            "Type":"Server",
+            "Protect":"false",
+            "ManagementOU":"Managed Resources,Servers Resources",
+            "ManagedResources":
+                [
+                    "AD Roles,Group",
+                    "AD Tasks,Group",
+                    "URA,Group",
+                    "Admin Accounts,User"
+                ],
+            "Computers":"SCCM,SCOM,File Server,Exchange",
+            "ServersResources":
+                [
+                    "Servers, Computer",
+                    "Application Groups,Groups",
+                    "Service Accounts,SvcAccts",
+                    "URA,Groups"
+                ]
+            },
+            "Dept1":
+            {
+            "Name":"Dept1",
+            "Path":"Root",
+            "Type":"Server",
+            "Protect":"false",
+            "ManagementOU":"Managed Resources,Servers Resources",
+            "ManagedResources":
+                [
+                    "AD Roles,Group",
+                    "AD Tasks,Group",
+                    "URA,Group",
+                    "Admin Accounts,User"
+                ],
+            "Computers":"SCCM,SCOM,File Server,Exchange",
+            "ServersResources":
+                [
+                    "Servers,Computer",
+                    "Application Groups, Groups",
+                    "Service Accounts,SvcAccts",
+                    "URA,Groups"
+                ]
+            },
+            "Clients":
+            {
+            "Name":"Organisation",
+            "Path":"Root",
+            "Type":"Clients",
+            "Protect":"false",
+            "ManagementOU":"Managed Resources,Servers Resources",
+            "ManagedResources":
+                [
+                    "AD Roles,Group",
+                    "AD Tasks,Group",
+                    "URA,Group",
+                    "Admin Accounts,User"
+                ],
+            "Computers":"Clients",
+            "ServersResources":
+                [
+                    "Clients,Computer",
+                    "Groups,Groups",
+                    "Accounts,Accts",
+                    "URA,Groups"
+                ]
+            }
+        }
+    }
+    
+    
+    
