@@ -146,12 +146,8 @@ Function Delegate_User
     $InheritedObjectType = [guid] "00000000-0000-0000-0000-000000000000"
     $ACE = New-Object System.DirectoryServices.ActiveDirectoryAccessRule $gpIndent, $ActiveDirectoryRights, $AccessControlType, $ObjectType, $InheritanceType, $InheritedObjectType
 
-
     $ouACL.AddAccessRule($ACE)
     Set-Acl -Path $OU -AclObject $ouACL
-
-
-
 }
 
 Function Delegate_Group 
