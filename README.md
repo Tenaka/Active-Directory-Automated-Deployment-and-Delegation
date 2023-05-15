@@ -1,1 +1,3 @@
 # AD-Delegation-POC
+
+This is Proof of Concept and unlikely to work as expected......
