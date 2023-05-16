@@ -42,6 +42,13 @@ Declare variable for Present Working Directory for either PS or ISE
         $Pwdir = split-path -parent $MyInvocation.MyCommand.Path
     }
 
+<#-----------------------------
+
+Deploy from PDC Only Check - TO BE DONE
+
+-----------------------------#>
+
+#TBC
 
 <#-----------------------------
 
@@ -146,8 +153,12 @@ Function Delegate_User
     $InheritedObjectType = [guid] "00000000-0000-0000-0000-000000000000"
     $ACE = New-Object System.DirectoryServices.ActiveDirectoryAccessRule $gpIndent, $ActiveDirectoryRights, $AccessControlType, $ObjectType, $InheritanceType, $InheritedObjectType
 
+
     $ouACL.AddAccessRule($ACE)
     Set-Acl -Path $OU -AclObject $ouACL
+
+
+
 }
 
 Function Delegate_Group 
@@ -537,8 +548,15 @@ function ADGroup_ManagedServerResources
     $del_ResGrp_Admin = "ResGrpAdmin","Local Administrative access"
     $del_ResGrp_User = "ResGrpUser","Local User access"
 
+    $del_GPO_Modify_ACL = "GPOModify","Edit and Modify GPO"
+
+
     #Group Descriptions
     $del_OU_Description = "Members of this group have $($del_OU_Full_Acl.split(",")[1])"
+    $del_RG_Admin_Description = "Members of this group have $($del_ResGrp_Admin.split(",")[1])"
+    $del_RG_User_Description = "Members of this group have $($del_ResGrp_User.split(",")[1])"
+
+    $del_GPO_Modify_Description = "Members of this group have $($del_GPO_Modify_ACL.split(",")[1])"
 
     #Local and Global
     $del_DomainLocal = "AL_"
@@ -546,7 +564,13 @@ function ADGroup_ManagedServerResources
     $del_Group = $del_DomainLocal,$del_DomainGlobal
 
     #New Group
-    $new_GroupName=@()   
+    $new_GroupName=@()  
+    $adTasksDestination=@() 
+    $del_OUGroupName=@()
+    $del_RGGroupNameAdmin=@()
+    $del_RGGroupNameUser=@()
+    $gpoName=@()
+
 
     foreach ($del_grp in $del_Group)
         {
@@ -555,57 +579,169 @@ function ADGroup_ManagedServerResources
             {
                 $adTasksDestination = "OU=AD Tasks,$($ouMgmtResDN)"
 
-                $del_GroupName = "$($del_grp)OU_$($ouOrgName)_$($ouMgmdRes)_$($del_OU_Full_Acl.split(",")[0])"
+                #OU Delegation Group
+                $del_OUGroupName = "$($del_grp)OU_$($ouOrgName)_$($ouMgmdRes)_$($del_OU_Full_Acl.split(",")[0])"
             }
         elseif ($ManSrvChoice -match "Server")
             {
                 $adTasksDestination = "OU=AD Tasks,$($ouMgmtResDN)" 
 
-                $del_GroupName = "$($del_grp)OU_$($ouOrgName)_$($ouSvrRes)_$($del_OU_Full_Acl.split(",")[0])"
+                #OU Delegation Group
+                $del_OUGroupName = "$($del_grp)OU_$($ouOrgName)_$($ouSvrRes)_$($del_OU_Full_Acl.split(",")[0])"
+
+                #Restriced Group 
+                $del_RGGroupNameAdmin = "$($del_grp)RG_$($ouOrgName)_$($ouSvrRes)_$($del_ResGrp_Admin.split(",")[0])"
+                $del_RGGroupNameUser = "$($del_grp)RG_$($ouOrgName)_$($ouSvrRes)_$($del_ResGrp_User.split(",")[0])"
+
+                #GPO Modify
+                $del_GPOGroupModify = "$($del_grp)GPO_$($ouOrgName)_$($ouSvrRes)_$($del_GPO_Modify_ACL.split(",")[0])"
             }
         
         #Create new AD Groups
-        if ($del_GroupName -like "$del_DomainGlobal*")
+        if ($del_OUGroupName -like "$del_DomainGlobal*")
             {
-                New-ADGroup -Name $del_GroupName –groupscope Global -Path $adTasksDestination -Description $del_OU_Description 
+                #OU Delegation Group
+                New-ADGroup -Name $del_OUGroupName –groupscope Global -Path $adTasksDestination -Description $del_OU_Description  
                 
-              #  $ou=@()
-              #  $groupName=@()
-
-              #  $ou = $ouMgmtResDN 
-              #  $groupName = $del_GroupName
-              #  Delegate_FullControl($ou,$GroupName)             
+                #Restriced Group 
+                New-ADGroup -Name $del_RGGroupNameAdmin –groupscope Global -Path $adTasksDestination -Description $del_RG_Admin_Description
+                New-ADGroup -Name $del_RGGroupNameUser –groupscope Global -Path $adTasksDestination -Description $del_RG_User_Description 
+                
+                #GPO Modify
+                New-ADGroup -Name $del_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description
+                      
             }
-        elseif ($del_GroupName -like "$del_DomainLocal*")
+        elseif ($del_OUGroupName -like "$del_DomainLocal*")
             {
-                New-ADGroup -Name $del_GroupName –groupscope DomainLocal -Path $adTasksDestination -Description $del_OU_Description  
+                #OU Delegation Group
+                New-ADGroup -Name $del_OUGroupName –groupscope DomainLocal -Path $adTasksDestination -Description $del_OU_Description  
                 
-                #$get_GroupName = Get-ADGroup $del_GroupName
-                #$get_GroupName_Sid = $get_GroupName.SID.Value
+                #Restriced Group 
+                New-ADGroup -Name $del_RGGroupNameAdmin –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_Admin_Description
+                New-ADGroup -Name $del_RGGroupNameUser –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_User_Description
+
+                #GPO Modify
+                New-ADGroup -Name $del_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description
+
                 $ou=@()
                 $groupName=@()
 
-                if ($del_GroupName -match "Server Resources"){$ou = $ouSvrResDN}
-                elseif ($del_GroupName -match "Managed Resources"){$ou = $ouMgmtResDN}
-                $groupName = $del_GroupName
-                Delegate_FullControl($ou,$GroupName)
+                if ($del_OUGroupName -match "Server Resources"){$ou = $ouSvrResDN}
+                elseif ($del_OUGroupName -match "Managed Resources"){$ou = $ouMgmtResDN}
+                $groupName = $del_OUGroupName
+
+                #Function to delegate OU Full Control to a named group
+                Delegate_FullControl($ou,$GroupName)  
                 
-                             
+                #$get_GroupName = Get-ADGroup $del_OUGroupName
+                #$get_GroupName_Sid = $get_GroupName.SID.Value
+                
+                #Get New Group Name and SID
+                $gpoName = "GPO_$($ouSvrRes)_$($ouOrgName)_Custom"
+                $getRtRGAdmin = Get-ADGroup $del_RGGroupNameAdmin
+                $getRtRGRDP = Get-ADGroup $del_RGGroupNameUser
+
+                GPORestrictedGroups-ServerRes($gpoName,$getRtRGAdmin,$getRtRGRDP,$ouOrgName,$del_GPOGroupModify)
+                           
             } 
                         
-        $new_GroupName+=$del_GroupName -join ","               
+        $new_OUGroupName+=$del_OUGroupName -join "," 
+        $new_RGAdminGroupName+=$del_RGGroupNameAdmin -join "," 
+        $new_RGAUserGroupName+=$del_RGGroupNameUser -join ","  
+        $new_GPOModGroupName+=$del_GPOGroupModify -join ","  
+                     
     }
 
-    #Nest groups
+    #Nested groups
     try
         {                
-            Add-ADGroupMember $new_GroupName[0] $new_GroupName[1]
+            Add-ADGroupMember $new_OUGroupName[0] $new_OUGroupName[1]
+            Add-ADGroupMember $new_RGAdminGroupName[0] $new_RGAdminGroupName[1]
+            Add-ADGroupMember $new_RGAUserGroupName[0] $new_RGAUserGroupName[1]
+            Add-ADGroupMember $new_GPOModGroupName[0] $new_GPOModGroupName[1]
         }
     catch
         {
-            Add-ADGroupMember $new_GroupName[1] $new_GroupName[0]
+            Add-ADGroupMember $new_OUGroupName[1] $new_OUGroupName[0]
+            Add-ADGroupMember $new_RGAdminGroupName[1] $new_RGAdminGroupName[0]
+            Add-ADGroupMember $new_RGAUserGroupName[1] $new_RGAUserGroupName[0]
+            Add-ADGroupMember $new_GPOModGroupName[1] $new_GPOModGroupName[0]
         }
 }
+
+
+Function GPORestrictedGroups-ServerRes
+{
+    #Root of the domain
+    $rootDSE = (Get-ADRootDSE).rootDomainNamingContext
+
+    #Path to Sysvol
+    $smbSysVol = ((Get-SmbShare -name "sysvol").path).replace("SYSVOL\sysvol","sysvol")
+
+    #Get New Group Name and SID
+    #$getRtRGAdmin = Get-ADGroup $rgRtAdminGp
+    #$getRtRGRDP = Get-ADGroup $rgRtRDPGp
+
+    $getRtRGAdminSid = $getRtRGAdmin.SID.Value
+    $getRtRGRDPSid = $getRtRGRDP.SID.Value
+
+    <#-----------------------------
+
+    Create Member Server top level GPO and set Restricted Groups and URA
+
+    -----------------------------#>
+    $getOUMS = Get-ADOrganizationalUnit -Filter * | where {$_.DistinguishedName -eq $ouSvrResDN} 
+    #New GPO based on the service and linked to OU
+    New-GPO -Name $GPOName | New-GPLink -Target $getOUMS.DistinguishedName
+
+    $getGpoId = (Get-GPO $GPOName).id
+    $getGPOPath = (Get-GPO $GPOName).path
+    $del_GPO_Edit_Acl
+    Set-GPPermission -Guid $getGpoId -PermissionLevel GpoEditDeleteModifySecurity -TargetType Group -TargetName $del_GPOGroupModify
+
+    $sysvol = "$($smbSysvol)\domain\Policies\{$($getGpoId)}\Machine\Microsoft\Windows NT\SecEdit"
+    $gpt = "$($smbSysvol)\domain\Policies\{$($getGpoId)}\GPT.ini"
+    Set-content $gpt -Value "[General]"
+    Add-Content $gpt -Value "Version=1" 
+
+    New-Item -Path $sysvol -ItemType Directory -Force
+    New-Item -Path $sysvol -Name GptTmpl.inf -ItemType File -Force
+
+    $gptFile = "$($sysvol)\GptTmpl.inf"
+
+    #S-1-5-32-544 = Administrator Group
+    #S-1-5-32-555 = Remote Desktop Group
+    #SeRemoteInteractiveLogonRight = Allow log on through Remote Desktop Services
+
+    #Admin Group Sids for Restricted Groups
+    $addConAdmin = "*S-1-5-32-544__Members = *$($getRtRGAdminSid)"
+    #RDP Group Sids for Restricted Groups
+    $addConRDP = "*S-1-5-32-555__Members = *$($getRtRGRDPSid)" 
+
+    #User Rights Assignments
+    $addConURARemote = "SeRemoteInteractiveLogonRight = *$($getRtRGAdminSid),*$($getRtRGRDPSid)" 
+
+    #Update GmpTmpl.inf with URA and Restricted Groups
+    Add-Content -Path $gptFile -Value '[Unicode]'
+    Add-Content -Path $gptFile -Value 'Unicode=yes'
+    Add-Content -Path $gptFile -Value '[Version]'
+    Add-Content -Path $gptFile -Value 'signature="$CHICAGO$"'
+    Add-Content -Path $gptFile -Value 'Revision=1'
+    Add-Content -Path $gptFile -Value '[Group Membership]'
+    Add-Content -Path $gptFile -Value '*S-1-5-32-544__Memberof ='
+    Add-Content -Path $gptFile -Value $addConAdmin 
+    Add-Content -Path $gptFile -Value '*S-1-5-32-555__Memberof ='
+    Add-Content -Path $gptFile -Value $addConRDP 
+    Add-Content -Path $gptFile -Value '[Privilege Rights]'
+    Add-Content -Path $gptFile -Value $addConURARemote    
+
+    #Set GPMC Machine Extensions so Manual Intervention is both displayed in GPO Management and applies to target 
+    Set-ADObject -Identity $getGPOPath -Replace @{gPCMachineExtensionNames="[{827D319E-6EAC-11D2-A4EA-00C04F79F83A}{803E14A0-B4FB-11D0-A0D0-00A0C90F574B}]"}
+    Set-ADObject -Identity $getGPOPath -Replace @{versionNumber="1"}
+
+
+}
+
 
 
 <#-----------------------------
@@ -744,7 +880,8 @@ Server Resources
                     #Function to create managment OU for each Application or Service eg SCCM, SCOM, Exchange
                     $ouSvrResDN=@()
                     $gtouSvrResDN=@()
-                    
+
+                
                     $ouSvrResDN = "OU=$($ouSvrRes),$($ouOrgNameDN)"
                     $gtouSvrResDN = try {Get-ADOrganizationalUnit $ouSvrResDN -ErrorAction SilentlyContinue} catch {}
                     CreateOU-SrvRes($ouSvrRes,$ouOrgNameDN,$ouProtect)    
@@ -779,9 +916,8 @@ Server Resources
 
                             $ouSvrResMgmtDN = "OU=$($ouSrvResOU),$($ouSrvResCompDN)"
                             $gtouSvrResMgmtDN = try {Get-ADOrganizationalUnit $ouSvrResMgmtDN -ErrorAction SilentlyContinue} catch {}
-                            CreateOU-SrvMgmt($ouSrvResOU,$ouSrvResCompDN,$ouProtect)
+                            CreateOU-SrvMgmt($ouSrvResOU,$ouSrvResCompDN,$ouProtect,$ouSvrResDN)
 
-                            
                         }
                     }
                 }
@@ -799,6 +935,4 @@ Stop Logging
 
 
 }
-
-
 
