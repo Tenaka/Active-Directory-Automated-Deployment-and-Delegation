@@ -25,4 +25,4 @@ Description.
             Deploys the Domain configutation eg OU and delgation based on:
             https://github.com/Tenaka/AD-Delegation
            
-          
+Current effort is dedicated into CreateOU.ps1 - Likely to be daily changes          
