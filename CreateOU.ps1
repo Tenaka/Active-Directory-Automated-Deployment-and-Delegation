@@ -570,6 +570,10 @@ function ADGroup_ManagedServerResources
     $del_RGGroupNameAdmin=@()
     $del_RGGroupNameUser=@()
     $gpoName=@()
+    $new_OUGroupName=@()
+    $new_RGAdminGroupName=@()
+    $new_RGAUserGroupName=@()
+    $new_GPOModGroupName=@()
 
 
     foreach ($del_grp in $del_Group)
@@ -609,6 +613,13 @@ function ADGroup_ManagedServerResources
                 
                 #GPO Modify
                 New-ADGroup -Name $del_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description
+
+                #Add to array for group nesting
+                $new_OUGroupName+="$($del_OUGroupName)"
+                $new_RGAdminGroupName+="$($del_RGGroupNameAdmin)"
+                $new_RGAUserGroupName+="$($del_RGGroupNameUser)" 
+                $new_GPOModGroupName+="$($del_GPOGroupModify)"
+
                       
             }
         elseif ($del_OUGroupName -like "$del_DomainLocal*")
@@ -632,24 +643,20 @@ function ADGroup_ManagedServerResources
 
                 #Function to delegate OU Full Control to a named group
                 Delegate_FullControl($ou,$GroupName)  
-                
-                #$get_GroupName = Get-ADGroup $del_OUGroupName
-                #$get_GroupName_Sid = $get_GroupName.SID.Value
-                
+                              
                 #Get New Group Name and SID
-                $gpoName = "GPO_$($ouSvrRes)_$($ouOrgName)_Custom"
+                $gpoName = "GPO_$($ouOrgName)_$($ouSvrRes)_Custom"
                 $getRtRGAdmin = Get-ADGroup $del_RGGroupNameAdmin
                 $getRtRGRDP = Get-ADGroup $del_RGGroupNameUser
 
                 GPORestrictedGroups-ServerRes($gpoName,$getRtRGAdmin,$getRtRGRDP,$ouOrgName,$del_GPOGroupModify)
-                           
-            } 
-                        
-        $new_OUGroupName+=$del_OUGroupName -join "," 
-        $new_RGAdminGroupName+=$del_RGGroupNameAdmin -join "," 
-        $new_RGAUserGroupName+=$del_RGGroupNameUser -join ","  
-        $new_GPOModGroupName+=$del_GPOGroupModify -join ","  
-                     
+
+                #Add to array for group nesting
+                $new_OUGroupName+="$($del_OUGroupName)"
+                $new_RGAdminGroupName+="$($del_RGGroupNameAdmin)"
+                $new_RGAUserGroupName+="$($del_RGGroupNameUser)" 
+                $new_GPOModGroupName+="$($del_GPOGroupModify)"          
+            }                  
     }
 
     #Nested groups
@@ -917,7 +924,7 @@ Server Resources
                             $ouSvrResMgmtDN = "OU=$($ouSrvResOU),$($ouSrvResCompDN)"
                             $gtouSvrResMgmtDN = try {Get-ADOrganizationalUnit $ouSvrResMgmtDN -ErrorAction SilentlyContinue} catch {}
                             CreateOU-SrvMgmt($ouSrvResOU,$ouSrvResCompDN,$ouProtect,$ouSvrResDN)
-
+  
                         }
                     }
                 }
@@ -935,4 +942,6 @@ Stop Logging
 
 
 }
+
+
 
