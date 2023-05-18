@@ -79,7 +79,7 @@ Start Some Basic Logging
 
 -----------------------------#>
 
-    #Start-Transcript -Path "$($Pwdir)\4_CreateOUs.log" -Append -Force
+    Start-Transcript -Path "$($Pwdir)\4_CreateOUs.log" -Force
 
 <#-----------------------------
 
@@ -98,6 +98,14 @@ Disable Scheduled Task and Autologon
 
 <#-----------------------------
 
+FUNCTIONS - Delegations
+
+-----------------------------#>
+
+Function Delegate_User
+{
+<#-----------------------------
+
 Functions for delegating the creation of Users, Workstation or Groups etc
 
      All                             =  00000000-0000-0000-0000-000000000000 
@@ -110,15 +118,13 @@ Functions for delegating the creation of Users, Workstation or Groups etc
      OrganizationalUnit              =  bf967aa5-0de6-11d0-a285-00aa003049e2 
      User                            =  bf967aba-0de6-11d0-a285-00aa003049e2 
 
+
+    delOU_UsrOU = "OU=Resources,DC=tenaka,DC=loc"
+    $delOU_UsrGrp = "TESTGP"
+    Delegate_User(delOU_UsrOU,$delOU_UsrGrp)
+
 -----------------------------#>
-
-Function Delegate_User
-{
     Set-Location AD:
-
-    #delOU_UsrOU = "OU=Resources,DC=tenaka,DC=loc"
-    #$delOU_UsrGrp = "TESTGP"
-    #Delegate_User(delOU_UsrOU,$delOU_UsrGrp)
 
     $ouACL = (get-acl -path $OU).Access
     $getGp = Get-ADGroup -Identity $GroupName
@@ -153,19 +159,19 @@ Function Delegate_User
     $InheritedObjectType = [guid] "00000000-0000-0000-0000-000000000000"
     $ACE = New-Object System.DirectoryServices.ActiveDirectoryAccessRule $gpIndent, $ActiveDirectoryRights, $AccessControlType, $ObjectType, $InheritanceType, $InheritedObjectType
 
-
     $ouACL.AddAccessRule($ACE)
     Set-Acl -Path $OU -AclObject $ouACL
-
-
-
 }
 
 Function Delegate_Group 
 {
-    #delOU_GrpOU = "OU=Resources,DC=tenaka,DC=loc"
-    #$delOU_GrpGrp = "TESTGP"
-    #Delegate_Group(delOU_GrpOU,$delOU_GrpGrp)
+<#-----------------------------
+
+delOU_GrpOU = "OU=Resources,DC=tenaka,DC=loc"
+$delOU_GrpGrp = "TESTGP"
+Delegate_Group(delOU_GrpOU,$delOU_GrpGrp)
+
+-----------------------------#>
     
     Set-Location AD:
 
@@ -211,9 +217,13 @@ Function Delegate_Group
 
 Function Delegate_Computer
 {
-    #delOU_CompOU = "OU=Resources,DC=tenaka,DC=loc"
-    #$delOU_CompGrp = "TESTGP"
-    #Delegate_Computer(delOU_CompOU,$delOU_CompGrp)
+<#-----------------------------
+
+delOU_CompOU = "OU=Resources,DC=tenaka,DC=loc"
+$delOU_CompGrp = "TESTGP"
+Delegate_Computer(delOU_CompOU,$delOU_CompGrp)
+
+-----------------------------#>
    
     Set-Location AD:
 
@@ -258,9 +268,14 @@ Function Delegate_Computer
 
 Function Delegation_SvcAccts
 {
-    #delOU_SvcAccOU = "OU=Resources,DC=tenaka,DC=loc"
-    #$delOU_SvcAccGrp = "TESTGP"
-    #Delegate_SvcAccts(delOU_SvcAccOU,$delOU_SvcAccGrp)
+<#-----------------------------
+
+delOU_SvcAccOU = "OU=Resources,DC=tenaka,DC=loc"
+$delOU_SvcAccGrp = "TESTGP"
+Delegate_SvcAccts(delOU_SvcAccOU,$delOU_SvcAccGrp)
+
+-----------------------------#>
+
 
     Set-Location AD:
 
@@ -369,9 +384,14 @@ Function Delegation_SvcAccts
 
 Function Delegate_FullControl
 {
-    #delOU_FullOU = "OU=Resources,DC=tenaka,DC=loc"
-    #$delOU_FullGrp = "TESTGP"
-    #Delegate_FullControl(delOU_FullOU,$delOU_FullGrp)
+<#-----------------------------
+
+delOU_FullOU = "OU=Resources,DC=tenaka,DC=loc"
+$delOU_FullGrp = "TESTGP"
+Delegate_FullControl(delOU_FullOU,$delOU_FullGrp)
+
+-----------------------------#>
+
    
     Set-Location AD:
 
@@ -417,12 +437,20 @@ Function Delegate_FullControl
 
 <#-----------------------------
 
-Functions for Create OUs
+FUNCTIONS - Create OUs and Security Groups
 
 -----------------------------#>
-#Create Organisation level OU
+
 function CreateOU-OrgRoot
 {
+<#-----------------------------
+
+Create Organisation level OU
+
+OU=ORG2,DC=testdom,DC=loc
+
+-----------------------------#>
+
     if ($gtouOrgNameDN.DistinguishedName -ne $ouOrgNameDN)
         {
                 #Create new Organisation OU 
@@ -438,7 +466,14 @@ function CreateOU-OrgRoot
     
 #Create Management Resource level OU
 function CreateOU-MgmtRes
-{    
+{
+<#-----------------------------
+
+Create Management Resources
+
+OU=Management Resouces,OU=Org2,DC=testdom,DC=loc
+
+-----------------------------#>    
         if ($gtouMgmtResDN.DistinguishedName -ne $ouMgmtResDN)
             {
                 try {
@@ -451,9 +486,14 @@ function CreateOU-MgmtRes
             }
     }
 
-#Creates OU for Managment of the Server Resources
+#Creates OU for Managment of the Service Resources
 function CreateOU-MgmtResMgmt
 {
+<#-----------------------------
+
+Start Some Basic Logging
+
+-----------------------------#>
         
             if ($ouMgmtResOUDN.DistinguishedName -ne $ouMgmtResOuDN)
             {
@@ -468,10 +508,14 @@ function CreateOU-MgmtResMgmt
 
         }
 
-
 #Create Server Resource level OU
 function CreateOU-SrvRes
 {
+<#-----------------------------
+
+Start Some Basic Logging
+
+-----------------------------#>
     #$ouSvrRes = OU to Create
     #$ouOrgNameDN = DN of parent OU
     #$ouProtect = Is protected
@@ -493,6 +537,11 @@ function CreateOU-SrvRes
 #Create Server or Application level sub-ou 
 function CreateOU-SrvComp
 {
+<#-----------------------------
+
+Start Some Basic Logging
+
+-----------------------------#>
         #$ouSvrRes = OU to Create
         #$ouOrgNameDN = DN of parent OU
         #$ouProtect = Is protected
@@ -512,19 +561,26 @@ function CreateOU-SrvComp
             }
         }
 
-#Create managment ou for each Server or Applicaiton
+
 function CreateOU-SrvMgmt
 {
-            #$ouSrvResOU = OU to Create
-            #$ouSrvResCompDN = DN of parent OU
-            #$ouProtect = Is protected
+<#-----------------------------
+#Create management ou for each Server or Application
+
+$ouSrvResOU = OU to Create
+$ouSrvResCompDN = DN of parent OU
+$ouProtect = Is protected
     
-            #CreateOU-SrvMgmt($ouSrvResOU,$ouSrvResCompDN,$ouProtect)
+CreateOU-SrvMgmt($ouSrvResOU,$ouSrvResCompDN,$ouProtect)
+
+-----------------------------#>
+
             if ($gtouSvrResMgmtDN.DistinguishedName -ne $ouSvrResMgmtDN)
                 {
                     try 
                     {
                         New-ADOrganizationalUnit -Name $ouSrvResOU -Path $ouSrvResCompDN -ProtectedFromAccidentalDeletion $ouProtect
+                        Write-Host "new AD OU $ouSrvResOU at $ouSrvResCompDN" -ForegroundColor Yellow
                     }
                     catch
                     {
@@ -533,10 +589,15 @@ function CreateOU-SrvMgmt
                 }
             }
 
-function ADGroup_ManagedServerResources 
-{                    
-    #Create nested groups Domain Global into Domain Local and attach Domain Local to the object
-    #AL AG_Managed Resources_OU_FullCtrl
+function ADGroup-ManagedServerResources 
+{
+<#-----------------------------
+
+Create nested groups Domain Global into Domain Local and attach Domain Local to the object
+AL AG_Managed Resources_OU_FullCtrl
+
+-----------------------------#>                    
+
 
     #Group Acl and Description
     $del_OU_Full_Acl = "FullCtrl","Full Control of all OU objects"
@@ -575,6 +636,8 @@ function ADGroup_ManagedServerResources
     $new_RGAUserGroupName=@()
     $new_GPOModGroupName=@()
 
+    $SvcResTrun = "SvcRes"
+    $mgmtResTruc = "MgmtRes"
 
     foreach ($del_grp in $del_Group)
         {
@@ -584,35 +647,35 @@ function ADGroup_ManagedServerResources
                 $adTasksDestination = "OU=AD Tasks,$($ouMgmtResDN)"
 
                 #OU Delegation Group
-                $del_OUGroupName = "$($del_grp)OU_$($ouOrgName)_$($ouMgmdRes)_$($del_OU_Full_Acl.split(",")[0])"
+                $del_OUGroupName = "$($del_grp)OU_$($ouOrgName)_$($mgmtResTruc)_$($del_OU_Full_Acl.split(",")[0])"
             }
         elseif ($ManSrvChoice -match "Server")
             {
                 $adTasksDestination = "OU=AD Tasks,$($ouMgmtResDN)" 
 
                 #OU Delegation Group
-                $del_OUGroupName = "$($del_grp)OU_$($ouOrgName)_$($ouSvrRes)_$($del_OU_Full_Acl.split(",")[0])"
+                $del_OUGroupName = "$($del_grp)OU_$($ouOrgName)_$($SvcResTrun)_$($del_OU_Full_Acl.split(",")[0])"
 
                 #Restriced Group 
-                $del_RGGroupNameAdmin = "$($del_grp)RG_$($ouOrgName)_$($ouSvrRes)_$($del_ResGrp_Admin.split(",")[0])"
-                $del_RGGroupNameUser = "$($del_grp)RG_$($ouOrgName)_$($ouSvrRes)_$($del_ResGrp_User.split(",")[0])"
+                $del_RGGroupNameAdmin = "$($del_grp)RG_$($ouOrgName)_$($SvcResTrun)_$($del_ResGrp_Admin.split(",")[0])"
+                $del_RGGroupNameUser = "$($del_grp)RG_$($ouOrgName)_$($SvcResTrun)_$($del_ResGrp_User.split(",")[0])"
 
                 #GPO Modify
-                $del_GPOGroupModify = "$($del_grp)GPO_$($ouOrgName)_$($ouSvrRes)_$($del_GPO_Modify_ACL.split(",")[0])"
+                $del_GPOGroupModify = "$($del_grp)GPO_$($ouOrgName)_$($SvcResTrun)_$($del_GPO_Modify_ACL.split(",")[0])"
             }
         
         #Create new AD Groups
         if ($del_OUGroupName -like "$del_DomainGlobal*")
             {
                 #OU Delegation Group
-                New-ADGroup -Name $del_OUGroupName –groupscope Global -Path $adTasksDestination -Description $del_OU_Description  
+                New-ADGroup $del_OUGroupName –groupscope Global -Path $adTasksDestination -Description $del_OU_Description  
                 
                 #Restriced Group 
-                New-ADGroup -Name $del_RGGroupNameAdmin –groupscope Global -Path $adTasksDestination -Description $del_RG_Admin_Description
-                New-ADGroup -Name $del_RGGroupNameUser –groupscope Global -Path $adTasksDestination -Description $del_RG_User_Description 
+                New-ADGroup $del_RGGroupNameAdmin –groupscope Global -Path $adTasksDestination -Description $del_RG_Admin_Description
+                New-ADGroup $del_RGGroupNameUser –groupscope Global -Path $adTasksDestination -Description $del_RG_User_Description 
                 
                 #GPO Modify
-                New-ADGroup -Name $del_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description
+                New-ADGroup $del_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description
 
                 #Add to array for group nesting
                 $new_OUGroupName+="$($del_OUGroupName)"
@@ -625,19 +688,19 @@ function ADGroup_ManagedServerResources
         elseif ($del_OUGroupName -like "$del_DomainLocal*")
             {
                 #OU Delegation Group
-                New-ADGroup -Name $del_OUGroupName –groupscope DomainLocal -Path $adTasksDestination -Description $del_OU_Description  
+                New-ADGroup $del_OUGroupName –groupscope DomainLocal -Path $adTasksDestination -Description $del_OU_Description  
                 
                 #Restriced Group 
-                New-ADGroup -Name $del_RGGroupNameAdmin –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_Admin_Description
-                New-ADGroup -Name $del_RGGroupNameUser –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_User_Description
+                New-ADGroup $del_RGGroupNameAdmin –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_Admin_Description
+                New-ADGroup $del_RGGroupNameUser –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_User_Description
 
                 #GPO Modify
-                New-ADGroup -Name $del_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description
+                New-ADGroup $del_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description
 
                 $ou=@()
                 $groupName=@()
 
-                if ($del_OUGroupName -match "Server Resources"){$ou = $ouSvrResDN}
+                if ($del_OUGroupName -match "Service Resources"){$ou = $ouSvrResDN}
                 elseif ($del_OUGroupName -match "Managed Resources"){$ou = $ouMgmtResDN}
                 $groupName = $del_OUGroupName
 
@@ -649,7 +712,7 @@ function ADGroup_ManagedServerResources
                 $getRtRGAdmin = Get-ADGroup $del_RGGroupNameAdmin
                 $getRtRGRDP = Get-ADGroup $del_RGGroupNameUser
 
-                GPORestrictedGroups-ServerRes($gpoName,$getRtRGAdmin,$getRtRGRDP,$ouOrgName,$del_GPOGroupModify)
+                GPO-RestrictedGroups-ServerRes($gpoName,$getRtRGAdmin,$getRtRGRDP,$ouOrgName,$del_GPOGroupModify)
 
                 #Add to array for group nesting
                 $new_OUGroupName+="$($del_OUGroupName)"
@@ -676,9 +739,14 @@ function ADGroup_ManagedServerResources
         }
 }
 
-
-Function GPORestrictedGroups-ServerRes
+Function GPO-RestrictedGroups-ServerRes
 {
+<#-----------------------------
+
+OU=AD Tasks,OU=Service Resources,OU=Org3,DC=testdom,DC=loc
+AL_OU_ORG1_SvcRes_SCCM_URA_GroupMgmt
+
+-----------------------------#>
     #Root of the domain
     $rootDSE = (Get-ADRootDSE).rootDomainNamingContext
 
@@ -749,6 +817,79 @@ Function GPORestrictedGroups-ServerRes
 
 }
 
+function ADGroup_ServerRes_Services 
+{
+<#-----------------------------
+
+OU=AD Tasks,OU=Managed Resources,OU=Org3,DC=testdom,DC=loc
+                     
+Create nested groups Domain Global into Domain Local and attach Domain Local to the object
+AL AG_Managed Resources_OU_FullCtrl
+
+-----------------------------#> 
+<#
+
+#>
+    #Group Acl and Description
+    $del_OU_Full_Acl = "FullCtrl","Full Control of all OU objects"
+    $del_OU_Computer_Acl = "CompMgmt","Manage Computer Objects"
+    $del_OU_Group_Acl = "GroupMgmt","Manage Group objects"
+    $del_OU_User_Acl = "UserMgmt","Manage User objects"
+    $del_OU_Service_Acl = "SvcMgmt","Manage Service Accounts"
+    $del_GPO_Edit_Acl = "GPOedit","Edit Group Policy Objects"
+    $del_ResGrp_Admin = "ResGrpAdmin","Local Administrative access"
+    $del_ResGrp_User = "ResGrpUser","Local User access"
+
+    $del_GPO_Modify_ACL = "GPOModify","Edit and Modify GPO"
+
+    $del_DL_SrvOUGroup=@()
+    $del_DG_SrvOUGroup=@()
+    $del_Description=@()
+    $adTasksDestination=@()
+    $SvcResTrun=@()
+
+    #Truncate Service Resouce
+    $SvcResTrun = "SvcRes"
+
+    $adTasksDestination = "OU=AD Tasks,$($ouMgmtResDN)" 
+
+    if ($ouSrvResObj -eq "Group")
+    {$groupSub = $del_OU_Group_Acl}
+
+
+    if ($ouSrvResObj -eq "User")
+    {$groupSub = $del_OU_User_Acl}
+
+
+    if ($ouSrvResObj -eq "Computer")
+    {$groupSub = $del_OU_Computer_Acl}
+
+    if ($ouSrvResObj -eq "SvcAccts")
+    {$groupSub = $del_OU_Service_Acl}    
+
+    #Group Descriptions
+    $del_Description = "Members of this group have $($groupSub.split(",")[1])"
+
+    #Local and Global
+    $del_DomainLocal = "AL_"
+    $del_DomainGlobal = "AG_"
+
+    #$adTasksDestination = "OU=AD Tasks,$($ouMgmtResDN)" 
+    Write-Host "$adTasksDestination - Server Management groups" -ForegroundColor DarkYellow
+
+    #OU Delegation Group
+    $del_DL_SrvOUGroup = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($groupSub.split(",")[0])"
+    $del_DG_SrvOUGroup = "$($del_DomainGlobal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($groupSub.split(",")[0])"
+
+    New-ADGroup $del_DL_SrvOUGroup –groupscope DomainLocal -Path $adTasksDestination -Description $del_Description
+    New-ADGroup $del_DG_SrvOUGroup –groupscope Global -Path $adTasksDestination -Description $del_Description
+
+    Write-Host "$del_DL_SrvOUGroup - new group" -ForegroundColor Red
+    Write-Host "$del_DG_SrvOUGroup - new group" -ForegroundColor Red
+                
+    Add-ADGroupMember $del_DL_SrvOUGroup $del_DG_SrvOUGroup
+}
+
 
 
 <#-----------------------------
@@ -802,7 +943,7 @@ Import JSON for OU configuration
             #Protect OUs from deletion
             $ouProtect = [system.convert]::ToBoolean($ou.Protect)
 
-            #Define Name of Management OU Managed Resource (Delegation, URA, Roles) and Server Resources (Named Application\Services OU - SCCM, Exchange, File and Print)
+            #Define Name of Management OU Managed Resource (Delegation, URA, Roles) and Service Resources (Named Application\Services OU - SCCM, Exchange, File and Print)
             $ouMgmtRoot = $ou.ManagementOU
 
             #Managed Resource sub-OUs for ADRoles, ADTasks, URA and AdminAccounts
@@ -837,7 +978,7 @@ Create Organisation OU Top Level
 <#-----------------------------
 
 Managed Resources
-    Separate Managed Resouces and Server Resources to reduce complexity and dependancy hell
+    Separate Managed Resouces and Service Resources to reduce complexity and dependancy hell
 
 -----------------------------#>
                 $ouMgmtRtItems = $ouMgmtRoot.split(",")
@@ -872,13 +1013,13 @@ Managed Resources
                     
                     #Function Create Grouos for Managed Resources OU
                     $ManSrvChoice = "Managed"
-                    ADGroup_ManagedServerResources($ManSrvChoice)  
+                    ADGroup-ManagedServerResources($ManSrvChoice)  
 
                 }
 <#-----------------------------
 
-Server Resources
-    Separate Managed Resouces and Server Resources to reduce complexity and dependancy hell
+Service Resources
+    Separate Managed Resouces and Service Resources to reduce complexity and dependancy hell
 
 -----------------------------#>
                 #Create Management OU's Managed Resources
@@ -887,35 +1028,54 @@ Server Resources
                     #Function to create managment OU for each Application or Service eg SCCM, SCOM, Exchange
                     $ouSvrResDN=@()
                     $gtouSvrResDN=@()
-
                 
                     $ouSvrResDN = "OU=$($ouSvrRes),$($ouOrgNameDN)"
                     $gtouSvrResDN = try {Get-ADOrganizationalUnit $ouSvrResDN -ErrorAction SilentlyContinue} catch {}
+                    
+                    Write-Host "Create Service Management OU - ura servers" -ForegroundColor Cyan
+                    Write-Host "$ouSvrResDN" -ForegroundColor Green
+
+                    #Function - 
                     CreateOU-SrvRes($ouSvrRes,$ouOrgNameDN,$ouProtect)    
               
-                    #select the Server Resources to create sub-OUs
+                    #select the Service Resources to create sub-OUs
                     $ouSvrResDN = "OU=$($ouSvrRes),$($ouOrgNameDN)"
 
+                    #Management or Service Resources
                     $ManSrvChoice = "Server"
-                    ADGroup_ManagedServerResources($ManSrvChoice) 
+                    
+                    #Function - 
+                    ADGroup-ManagedServerResources($ManSrvChoice) 
+
+                    $ouCompItem=@()
 
                     $ouCompSplit = $ouComp.split(",")
                     foreach ($ouCompItem in $ouCompSplit)
                     {
+                        Write-Host "$ouCompItem" -ForegroundColor Green
                         #Function to create managment OU for each Application or Service eg SCCM, SCOM, Exchange
                         $ouSvrCompDN=@()
                         $gtouSvrResMgmtDN=@()
                     
                         $ouSvrCompDN = "OU=$($ouCompItem),$($ouSvrResDN)"
                         $gtouSvrResMgmtDN = try {Get-ADOrganizationalUnit $ouSvrCompDN -ErrorAction SilentlyContinue} catch {}
+                        
+                        Write-Host "$ouSvrCompDN" -ForegroundColor Magenta
+
+                        #Function
                         CreateOU-SrvComp($ouCompItem,$ouSvrResDN,$ouProtect)
+                        Write-Host "function CreateOU-SrvCompy $ouCompItem"
 
                         #Create management OUs for each Applications or Service 
                         $ouSrvResCompDN = "OU=$($ouCompItem),$($ouSvrResDN)"    
                         foreach ($ouSrvResItem in $ouSrvRes)
-                        {
+                        {                            
                             $ouSrvResOU = $ouSrvResItem.split(",")[0]
                             $ouSrvResObj = $ouSrvResItem.split(",")[1]
+
+                            Write-Host "$ouSrvResItem" -ForegroundColor Gray
+                            Write-Host "$ouSrvResOU" -ForegroundColor Green
+                            Write-Host "$ouSrvResObj" -ForegroundColor Green
                             
                             #Function to create managment OU for each Application or Service eg SCCM, SCOM, Exchange
                             $ouSvrResMgmtDN=@()
@@ -923,14 +1083,23 @@ Server Resources
 
                             $ouSvrResMgmtDN = "OU=$($ouSrvResOU),$($ouSrvResCompDN)"
                             $gtouSvrResMgmtDN = try {Get-ADOrganizationalUnit $ouSvrResMgmtDN -ErrorAction SilentlyContinue} catch {}
-                            CreateOU-SrvMgmt($ouSrvResOU,$ouSrvResCompDN,$ouProtect,$ouSvrResDN)
-  
+                            
+                            Write-Host "$ouSvrResMgmtDN" -ForegroundColor Magenta
+
+                            #Function
+                            CreateOU-SrvMgmt($ouSrvResOU,$ouSrvResCompDN,$ouProtect,$ouSvrResDN,$ouCompItem)
+
+                            $ouSrvResServiceDN=@()
+                            $ouSrvResServiceDN = "OU=$($ouSrvResOU),$($ouSrvResCompDN)"
+
+                            ADGroup_ServerRes_Services($ouSrvResServiceDN,$ouSrvResOU,$ouSrvResObj,$ouMgmtResDN,$ouCompItem) 
+                                                          
                         }
                     }
                 }
             }
     }
-
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
 
 <#-----------------------------
 
@@ -938,7 +1107,7 @@ Stop Logging
 
 -----------------------------#>
 
-       # Stop-Transcript -Force
+        Stop-Transcript
 
 
 }
