@@ -1,4 +1,4 @@
-﻿{
+{
     "FirstDC":
         {
         "PDCName":"WIN-VUS9M7QLHPN",
@@ -51,36 +51,13 @@
         },
        "OU":
        {
-        "Dept1":
+        "Tier0":
             {
-            "Name":"Dept1",
+            "Name":"Org1",
             "Path":"Root",
             "Type":"Server",
             "Protect":"false",
-            "ManagementOU":"Managed Resources,Servers Resources",
-            "ManagedResources":
-                [
-                    "AD Roles,Group",
-                    "AD Tasks,Group",
-                    "URA,Group",
-                    "Admin Accounts,User"
-                ],
-            "Computers":"SCCM,SCOM,File Server,Exchange",
-            "ServersResources":
-                [
-                    "Servers, Computer",
-                    "Application Groups,Groups",
-                    "Service Accounts,SvcAccts",
-                    "URA,Groups"
-                ]
-            },
-            "Dept1":
-            {
-            "Name":"Dept1",
-            "Path":"Root",
-            "Type":"Server",
-            "Protect":"false",
-            "ManagementOU":"Managed Resources,Servers Resources",
+            "ManagementOU":"Managed Resources,Service Resources",
             "ManagedResources":
                 [
                     "AD Roles,Group",
@@ -92,18 +69,41 @@
             "ServersResources":
                 [
                     "Servers,Computer",
-                    "Application Groups, Groups",
+                    "Application Groups,Group",
                     "Service Accounts,SvcAccts",
-                    "URA,Groups"
+                    "URA,Group"
+                ]
+            },
+            "Tier1":
+            {
+            "Name":"Org2",
+            "Path":"Root",
+            "Type":"Server",
+            "Protect":"false",
+            "ManagementOU":"Managed Resources,Service Resources",
+            "ManagedResources":
+                [
+                    "AD Roles,Group",
+                    "AD Tasks,Group",
+                    "URA,Group",
+                    "Admin Accounts,User"
+                ],
+            "Computers":"SCCM,SCOM,File Server,Exchange",
+            "ServersResources":
+                [
+                    "Servers,Computer",
+                    "Application Groups,Group",
+                    "Service Accounts,SvcAccts",
+                    "URA,Group"
                 ]
             },
             "Clients":
             {
-            "Name":"Organisation",
+            "Name":"Org3",
             "Path":"Root",
             "Type":"Clients",
             "Protect":"false",
-            "ManagementOU":"Managed Resources,Servers Resources",
+            "ManagementOU":"Managed Resources,Service Resources",
             "ManagedResources":
                 [
                     "AD Roles,Group",
@@ -115,9 +115,9 @@
             "ServersResources":
                 [
                     "Clients,Computer",
-                    "Groups,Groups",
+                    "Groups,Group",
                     "Accounts,Accts",
-                    "URA,Groups"
+                    "URA,Group"
                 ]
             }
         }
