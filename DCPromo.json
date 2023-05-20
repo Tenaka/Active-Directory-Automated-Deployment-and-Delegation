@@ -51,9 +51,9 @@
         },
        "OU":
        {
-        "Tier0":
+        "Organisation1":
             {
-            "Name":"not9",
+            "Name":"Org1",
             "Path":"Root",
             "Type":"Server",
             "Protect":"false",
@@ -74,9 +74,9 @@
                     "URA,Group"
                 ]
             },
-            "Tier1":
+            "Organisation2":
             {
-            "Name":"not19",
+            "Name":"Org2",
             "Path":"Root",
             "Type":"Server",
             "Protect":"false",
@@ -99,7 +99,7 @@
             },
             "Clients":
             {
-            "Name":"not13",
+            "Name":"Org3",
             "Path":"Root",
             "Type":"Clients",
             "Protect":"false",
