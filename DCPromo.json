@@ -53,7 +53,7 @@
        {
         "Tier0":
             {
-            "Name":"Org1",
+            "Name":"not9",
             "Path":"Root",
             "Type":"Server",
             "Protect":"false",
@@ -65,7 +65,7 @@
                     "URA,Group",
                     "Admin Accounts,User"
                 ],
-            "Computers":"SCCM,SCOM,File Server,Exchange",
+            "Computers":"Certificates,MOSS,DevOps,SQL,Oracle",
             "ServersResources":
                 [
                     "Servers,Computer",
@@ -76,7 +76,7 @@
             },
             "Tier1":
             {
-            "Name":"Org2",
+            "Name":"not19",
             "Path":"Root",
             "Type":"Server",
             "Protect":"false",
@@ -99,7 +99,7 @@
             },
             "Clients":
             {
-            "Name":"Org3",
+            "Name":"not13",
             "Path":"Root",
             "Type":"Clients",
             "Protect":"false",
@@ -116,7 +116,7 @@
                 [
                     "Clients,Computer",
                     "Groups,Group",
-                    "Accounts,Accts",
+                    "Accounts,User",
                     "URA,Group"
                 ]
             }
