@@ -872,7 +872,7 @@ AL AG_Managed Resources_OU_FullCtrl
         New-ADGroup $del_DL_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description
         New-ADGroup $del_DG_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description
 
-        $gpoName = "GPO_$($ouOrgName)_$($SvcRes)_$($ouCompItem)_$($ouSrvResOU)_Custom"
+        $gpoName = "GPO_$($ouOrgName)_$($ouSvrRes)_$($ouCompItem)_$($ouSrvResOU)_Custom"
 
         $del_RG_DL_ServerAdmin = Get-ADGroup $del_DL_RGGroupNameAdmin
         $del_RG_DL_ServerUser = Get-ADGroup $del_DL_RGGroupNameUser
@@ -1264,7 +1264,7 @@ Service Resources
                             $ouSrvResServiceDN = "OU=$($ouSrvResOU),$($ouSrvResCompDN)"
 
                             #Function create Service Management OUs
-                            ADGroup-ServiceRes-DelegationGrp($ouSrvResServiceDN,$ouSrvResOU,$ouSrvResObj,$ouMgmtResDN,$ouCompItem) 
+                            ADGroup-ServiceRes-DelegationGrp($ouSrvResServiceDN,$ouSrvResOU,$ouSrvResObj,$ouMgmtResDN,$ouCompItem,$ouSvrRes) 
 
                             write-host "Function ADGroup-ServiceRes-DelegationGrp($ouSrvResServiceDN,$ouSrvResOU,$ouSrvResObj,$ouMgmtResDN,$ouCompItem) with variables passed" -ForegroundColor Green                            
 
