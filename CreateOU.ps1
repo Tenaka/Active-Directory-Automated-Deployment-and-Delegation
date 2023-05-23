@@ -841,6 +841,10 @@ AL AG_Managed Resources_OU_FullCtrl
     {
         Delegate_User($GroupName,$delOU_FullOU)   
     }
+        elseif ($ouSrvResObj -eq "SvcAccts")
+    {
+        Delegate_User($GroupName,$delOU_FullOU)   
+    }
     elseif ($ouSrvResObj -eq "computer")
     {
         Delegate_Computer($GroupName,$delOU_FullOU)   
@@ -998,7 +1002,6 @@ $ouSrvResServiceDN,$ouSrvResOU
 
 
     #Server Admin
-
     $gt_del_RG_Svc_SrvAdminSid = $del_RG_DL_ServerAdmin.SID.Value
     $gt_del_RG_Svc_SrvUserSid = $del_RG_DL_ServerUser.SID.Value
 
