@@ -22,6 +22,7 @@ Version.
 230519.1 - Added Write-hosts - Support and out to screen what is creating
 230519.2 - Fixed issues with Service and Management Resouces OU full delegation not working - renamed to svcRes and MgmtRes and broke if statement
 230520.1 - Delegation of Service\Client Sub management OUs
+230322.1 - Inherited and service specific Restricted Groups and URA added to GPO for Servers
 
 -----------------------------#>
 
@@ -447,7 +448,7 @@ Delegate_FullControl(delOU_FullOU,$delOU_FullGrp)
 
 <#-----------------------------
 
-FUNCTIONS - Create OUs and Security Groups
+FUNCTIONS - Create OUs 
 
 -----------------------------#>
 
@@ -599,6 +600,13 @@ if ($gtouSvrResMgmtDN.DistinguishedName -ne $ouSvrResMgmtDN)
     }
 }
 
+
+<#-----------------------------
+
+FUNCTIONS - Create Security Groups and link to OUs and GPOs
+
+-----------------------------#>
+
 function ADGroup-ManagedServerResources 
 {
 <#-----------------------------
@@ -717,11 +725,11 @@ AL AG_Managed Resources_OU_FullCtrl
                               
                 #Get New Group Name and SID
                 $gpoName = "GPO_$($ouOrgName)_$($ouSvrRes)_Custom"
-                $getRtRGAdmin = Get-ADGroup $del_RGGroupNameAdmin
-                $getRtRGRDP = Get-ADGroup $del_RGGroupNameUser
+                $del_RG_DL_SvcResAdmin = Get-ADGroup $del_RGGroupNameAdmin
+                $del_RG_DL_SvcResUser = Get-ADGroup $del_RGGroupNameUser
              
-                write-host "Function GPO-RestrictedGroups-ServerRes($gpoName,$getRtRGAdmin,$getRtRGRDP,$ouOrgName,$del_GPOGroupModify) and variables passed" -ForegroundColor Red
-                GPO-RestrictedGroups-ServerRes($gpoName,$getRtRGAdmin,$getRtRGRDP,$ouOrgName,$del_GPOGroupModify)
+                write-host "Function GPO-ServiceResource-URA-ResGps($gpoName,$del_RG_DL_SvcResAdmin,$del_RG_DL_SvcResUser,$ouOrgName,$del_GPOGroupModify) and variables passed" -ForegroundColor Red
+                GPO-ServiceResource-URA-ResGps($gpoName,$del_RG_DL_SvcResAdmin,$del_RG_DL_SvcResUser,$ouOrgName,$del_GPOGroupModify)
                 
                 #Add to array for group nesting
                 $new_OUGroupName+="$($del_OUGroupName)"
@@ -748,86 +756,7 @@ AL AG_Managed Resources_OU_FullCtrl
         }
 }
 
-Function GPO-RestrictedGroups-ServerRes
-{
-<#-----------------------------
-
-OU=AD Tasks,OU=Service Resources,OU=Org3,DC=testdom,DC=loc
-AL_OU_ORG1_SvcRes_SCCM_URA_GroupMgmt
-
------------------------------#>
-    write-host "Function GPO Restricted Group for Services at $GPOName" -ForegroundColor Green
-    #Root of the domain
-    $rootDSE = (Get-ADRootDSE).rootDomainNamingContext
-
-    #Path to Sysvol
-    $smbSysVol = ((Get-SmbShare -name "sysvol").path).replace("SYSVOL\sysvol","sysvol")
-
-    #Get New Group Name and SID
-    #$getRtRGAdmin = Get-ADGroup $rgRtAdminGp
-    #$getRtRGRDP = Get-ADGroup $rgRtRDPGp
-
-    $getRtRGAdminSid = $getRtRGAdmin.SID.Value
-    $getRtRGRDPSid = $getRtRGRDP.SID.Value
-
-    <#-----------------------------
-
-    Create Member Server top level GPO and set Restricted Groups and URA
-
-    -----------------------------#>
-    $getOUMS = Get-ADOrganizationalUnit -Filter * | where {$_.DistinguishedName -eq $ouSvrResDN} 
-    #New GPO based on the service and linked to OU
-    New-GPO -Name $GPOName | New-GPLink -Target $getOUMS.DistinguishedName
-
-    $getGpoId = (Get-GPO $GPOName).id
-    $getGPOPath = (Get-GPO $GPOName).path
-    $del_GPO_Edit_Acl
-    Set-GPPermission -Guid $getGpoId -PermissionLevel GpoEditDeleteModifySecurity -TargetType Group -TargetName $del_GPOGroupModify
-
-    $sysvol = "$($smbSysvol)\domain\Policies\{$($getGpoId)}\Machine\Microsoft\Windows NT\SecEdit"
-    $gpt = "$($smbSysvol)\domain\Policies\{$($getGpoId)}\GPT.ini"
-    Set-content $gpt -Value "[General]"
-    Add-Content $gpt -Value "Version=1" 
-
-    New-Item -Path $sysvol -ItemType Directory -Force
-    New-Item -Path $sysvol -Name GptTmpl.inf -ItemType File -Force
-
-    $gptFile = "$($sysvol)\GptTmpl.inf"
-
-    #S-1-5-32-544 = Administrator Group
-    #S-1-5-32-555 = Remote Desktop Group
-    #SeRemoteInteractiveLogonRight = Allow log on through Remote Desktop Services
-
-    #Admin Group Sids for Restricted Groups
-    $addConAdmin = "*S-1-5-32-544__Members = *$($getRtRGAdminSid)"
-    #RDP Group Sids for Restricted Groups
-    $addConRDP = "*S-1-5-32-555__Members = *$($getRtRGRDPSid)" 
-
-    #User Rights Assignments
-    $addConURARemote = "SeRemoteInteractiveLogonRight = *$($getRtRGAdminSid),*$($getRtRGRDPSid)" 
-
-    #Update GmpTmpl.inf with URA and Restricted Groups
-    Add-Content -Path $gptFile -Value '[Unicode]'
-    Add-Content -Path $gptFile -Value 'Unicode=yes'
-    Add-Content -Path $gptFile -Value '[Version]'
-    Add-Content -Path $gptFile -Value 'signature="$CHICAGO$"'
-    Add-Content -Path $gptFile -Value 'Revision=1'
-    Add-Content -Path $gptFile -Value '[Group Membership]'
-    Add-Content -Path $gptFile -Value '*S-1-5-32-544__Memberof ='
-    Add-Content -Path $gptFile -Value $addConAdmin 
-    Add-Content -Path $gptFile -Value '*S-1-5-32-555__Memberof ='
-    Add-Content -Path $gptFile -Value $addConRDP 
-    Add-Content -Path $gptFile -Value '[Privilege Rights]'
-    Add-Content -Path $gptFile -Value $addConURARemote    
-
-    #Set GPMC Machine Extensions so Manual Intervention is both displayed in GPO Management and applies to target 
-    Set-ADObject -Identity $getGPOPath -Replace @{gPCMachineExtensionNames="[{827D319E-6EAC-11D2-A4EA-00C04F79F83A}{803E14A0-B4FB-11D0-A0D0-00A0C90F574B}]"}
-    Set-ADObject -Identity $getGPOPath -Replace @{versionNumber="1"}
-
-
-}
-
-function ADGroup_ServiceRes_DelegationGps 
+function ADGroup-ServiceRes-DelegationGrp 
 {
 <#-----------------------------
 
@@ -859,6 +788,9 @@ AL AG_Managed Resources_OU_FullCtrl
 
     #Truncate Service Resouce
     $SvcResTrun = "SvcRes"
+
+    if ($ouSrvResOU -eq "Application Groups"){$ouSrvResOU = "AppGrp"}
+    if ($ouSrvResOU -eq "Service Accounts"){$ouSrvResOU = "SvcAccts"}
 
     $adTasksDestination = "OU=AD Tasks,$($ouMgmtResDN)" 
 
@@ -912,13 +844,219 @@ AL AG_Managed Resources_OU_FullCtrl
     elseif ($ouSrvResObj -eq "computer")
     {
         Delegate_Computer($GroupName,$delOU_FullOU)   
-    }
-    elseif ($ouSrvResObj -eq "computer")
-    {
-        Delegation_SvcAccts($GroupName,$delOU_FullOU)   
+
+        Write-Host "Delegation_SvcAccts($GroupName,$delOU_FullOU)" -ForegroundColor Red
+        Delegation_SvcAccts($GroupName,$delOU_FullOU)  
+        #pause
+
+        #Restriced Group 
+        $del_DL_RGGroupNameAdmin = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_ResGrp_Admin.split(",")[0])"
+        $del_DG_RGGroupNameAdmin = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_ResGrp_Admin.split(",")[0])"
+
+        $del_DL_RGGroupNameUser = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_ResGrp_User.split(",")[0])"
+        $del_DG_RGGroupNameUser = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_ResGrp_User.split(",")[0])"
+
+        #GPO Modify
+        $del_DL_GPOGroupModify = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_GPO_Modify_ACL.split(",")[0])"
+        $del_DG_GPOGroupModify = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_GPO_Modify_ACL.split(",")[0])"
+        
+
+        #Restriced Group 
+        New-ADGroup $del_DL_RGGroupNameAdmin –groupscope Global -Path $adTasksDestination -Description $del_RG_Admin_Description
+        New-ADGroup $del_DG_RGGroupNameAdmin –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_Admin_Description
+        
+        New-ADGroup $del_DL_RGGroupNameUser –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_User_Description
+        New-ADGroup $del_DG_RGGroupNameUser –groupscope Global -Path $adTasksDestination -Description $del_RG_User_Description 
+                
+        #GPO Modify
+        New-ADGroup $del_DL_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description
+        New-ADGroup $del_DG_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description
+
+        $gpoName = "GPO_$($ouOrgName)_$($SvcRes)_$($ouCompItem)_$($ouSrvResOU)_Custom"
+
+        $del_RG_DL_ServerAdmin = Get-ADGroup $del_DL_RGGroupNameAdmin
+        $del_RG_DL_ServerUser = Get-ADGroup $del_DL_RGGroupNameUser
+
+        GPO-ServerOU-URA-ResGps($gpoName,$ouSrvResServiceDN,$ouSrvResOU,$del_RG_DL_ServerAdmin, $del_RG_DL_ServerUser,$del_DL_GPOGroupModify)        
     }
 }
 
+
+<#-----------------------------
+
+FUNCTIONS - Update User Rights Assignments and Restricted Groups
+
+-----------------------------#>
+
+Function GPO-ServiceResource-URA-ResGps
+{
+<#-----------------------------
+
+OU=AD Tasks,OU=Service Resources,OU=Org3,DC=testdom,DC=loc
+AL_OU_ORG1_SvcRes_SCCM_URA_GroupMgmt
+
+-----------------------------#>
+    write-host "Function GPO Restricted Group for Services at $GPOName" -ForegroundColor Green
+    #Root of the domain
+    $rootDSE = (Get-ADRootDSE).rootDomainNamingContext
+
+    #Path to Sysvol
+    $smbSysVol = ((Get-SmbShare -name "sysvol").path).replace("SYSVOL\sysvol","sysvol")
+
+    #Get New Group Name and SID
+    $gt_del_RG_SvcRes_AdminSid = $del_RG_DL_SvcResAdmin.SID.Value
+    $gt_del_RG_SvcRes_UserSid = $del_RG_DL_SvcResUser.SID.Value
+
+    <#-----------------------------
+
+    Create Member Server top level GPO and set Restricted Groups and URA
+
+    -----------------------------#>
+    $getOUMS = Get-ADOrganizationalUnit -Filter * | where {$_.DistinguishedName -eq $ouSvrResDN} 
+    #New GPO based on the service and linked to OU
+    New-GPO -Name $GPOName | New-GPLink -Target $getOUMS.DistinguishedName
+
+    $getGpoId = (Get-GPO $GPOName).id
+    $getGPOPath = (Get-GPO $GPOName).path
+    $del_GPO_Edit_Acl
+    Set-GPPermission -Guid $getGpoId -PermissionLevel GpoEditDeleteModifySecurity -TargetType Group -TargetName $del_GPOGroupModify
+
+    $sysvol = "$($smbSysvol)\domain\Policies\{$($getGpoId)}\Machine\Microsoft\Windows NT\SecEdit"
+    $gpt = "$($smbSysvol)\domain\Policies\{$($getGpoId)}\GPT.ini"
+    Set-content $gpt -Value "[General]"
+    Add-Content $gpt -Value "Version=1" 
+
+    New-Item -Path $sysvol -ItemType Directory -Force
+    New-Item -Path $sysvol -Name GptTmpl.inf -ItemType File -Force
+
+    $gptFile = "$($sysvol)\GptTmpl.inf"
+
+    #S-1-5-32-544 = Administrator Group
+    #S-1-5-32-555 = Remote Desktop Group
+    #SeRemoteInteractiveLogonRight = Allow log on through Remote Desktop Services
+
+    #Admin Group Sids for Restricted Groups
+    $addConAdmin = "*S-1-5-32-544__Members = *$($gt_del_RG_SvcRes_AdminSid)"
+    #RDP Group Sids for Restricted Groups
+    $addConRDP = "*S-1-5-32-555__Members = *$($gt_del_RG_SvcRes_UserSid)" 
+
+    #User Rights Assignments
+    $addConURARemote = "SeRemoteInteractiveLogonRight = *$($gt_del_RG_SvcRes_AdminSid),*$($gt_del_RG_SvcRes_UserSid)" 
+
+    #Update GmpTmpl.inf with URA and Restricted Groups
+    Add-Content -Path $gptFile -Value '[Unicode]'
+    Add-Content -Path $gptFile -Value 'Unicode=yes'
+    Add-Content -Path $gptFile -Value '[Version]'
+    Add-Content -Path $gptFile -Value 'signature="$CHICAGO$"'
+    Add-Content -Path $gptFile -Value 'Revision=1'
+    Add-Content -Path $gptFile -Value '[Group Membership]'
+    Add-Content -Path $gptFile -Value '*S-1-5-32-544__Memberof ='
+    Add-Content -Path $gptFile -Value $addConAdmin 
+    Add-Content -Path $gptFile -Value '*S-1-5-32-555__Memberof ='
+    Add-Content -Path $gptFile -Value $addConRDP 
+    Add-Content -Path $gptFile -Value '[Privilege Rights]'
+    Add-Content -Path $gptFile -Value $addConURARemote    
+
+    #Set GPMC Machine Extensions so Manual Intervention is both displayed in GPO Management and applies to target 
+    Set-ADObject -Identity $getGPOPath -Replace @{gPCMachineExtensionNames="[{827D319E-6EAC-11D2-A4EA-00C04F79F83A}{803E14A0-B4FB-11D0-A0D0-00A0C90F574B}]"}
+    Set-ADObject -Identity $getGPOPath -Replace @{versionNumber="1"}
+
+
+}
+
+Function GPO-ServerOU-URA-ResGps
+{
+<#-----------------------------
+
+OU=AD Tasks,OU=Service Resources,OU=Org3,DC=testdom,DC=loc
+AL_OU_ORG1_SvcRes_SCCM_URA_GroupMgmt
+
+$ouSrvResServiceDN,$ouSrvResOU
+
+-----------------------------#>
+    write-host "Function GPO Restricted Group for Services at $GPOName" -ForegroundColor Green
+    #Root of the domain
+    $rootDSE = (Get-ADRootDSE).rootDomainNamingContext
+
+    #Path to Sysvol
+    $smbSysVol = ((Get-SmbShare -name "sysvol").path).replace("SYSVOL\sysvol","sysvol")
+
+    #Get New Group Name and SID = Org
+    $del_DomainLocal = "AL_"
+    $del_DomainGlobal = "AG_"
+    $del_DL_RG_SvcRes_Admin = "$($del_DomainLocal)RG_$($ouOrgName)_$($SvcResTrun)_$($del_ResGrp_Admin.split(",")[0])"
+    $del_DL_RG_SvcRes_User = "$($del_DomainLocal)RG_$($ouOrgName)_$($SvcResTrun)_$($del_ResGrp_User.split(",")[0])"
+
+    Write-host $del_RGGroupNameAdmin -ForegroundColor Magenta
+
+    #Service Resource
+    $gt_RG_DL_SvcRes_Admin = Get-ADGroup $del_DL_RG_SvcRes_Admin
+    $gt_RG_DL_SvcRes_User = Get-ADGroup $del_DL_RG_SvcRes_User
+
+    $gt_del_RG_SvcRes_AdminSid = $gt_RG_DL_SvcRes_Admin.SID.Value
+    $gt_del_RG_SvcRes_UserSid = $gt_RG_DL_SvcRes_User.SID.Value
+
+
+    #Server Admin
+
+    $gt_del_RG_Svc_SrvAdminSid = $del_RG_DL_ServerAdmin.SID.Value
+    $gt_del_RG_Svc_SrvUserSid = $del_RG_DL_ServerUser.SID.Value
+
+    <#-----------------------------
+
+    Create Member Server top level GPO and set Restricted Groups and URA
+
+    -----------------------------#>
+    $getOUMS = Get-ADOrganizationalUnit -Filter * | where {$_.DistinguishedName -eq $ouSrvResServiceDN} 
+    #New GPO based on the service and linked to OU
+    New-GPO -Name $GPOName | New-GPLink -Target $getOUMS.DistinguishedName
+
+    $getGpoId = (Get-GPO $GPOName).id
+    $getGPOPath = (Get-GPO $GPOName).path
+    $del_GPO_Edit_Acl
+    Set-GPPermission -Guid $getGpoId -PermissionLevel GpoEditDeleteModifySecurity -TargetType Group -TargetName $del_GPOGroupModify
+
+    $sysvol = "$($smbSysvol)\domain\Policies\{$($getGpoId)}\Machine\Microsoft\Windows NT\SecEdit"
+    $gpt = "$($smbSysvol)\domain\Policies\{$($getGpoId)}\GPT.ini"
+    Set-content $gpt -Value "[General]"
+    Add-Content $gpt -Value "Version=1" 
+
+    New-Item -Path $sysvol -ItemType Directory -Force
+    New-Item -Path $sysvol -Name GptTmpl.inf -ItemType File -Force
+
+    $gptFile = "$($sysvol)\GptTmpl.inf"
+
+    #S-1-5-32-544 = Administrator Group
+    #S-1-5-32-555 = Remote Desktop Group
+    #SeRemoteInteractiveLogonRight = Allow log on through Remote Desktop Services
+
+    #Admin Group Sids for Restricted Groups
+    $addConAdmin = "*S-1-5-32-544__Members = *$($gt_del_RG_Svc_SrvAdminSid),*$($gt_del_RG_SvcRes_AdminSid)"
+    #RDP Group Sids for Restricted Groups
+    $addConRDP = "*S-1-5-32-555__Members = *$($gt_del_RG_Svc_SrvUserSid),*$($gt_del_RG_SvcRes_UserSid)" 
+
+    #User Rights Assignments
+    $addConURARemote = "SeRemoteInteractiveLogonRight = *$($gt_del_RG_Svc_SrvAdminSid),*$($gt_del_RG_Svc_SrvUserSid),*$($gt_del_RG_SvcRes_AdminSid),*$($gt_del_RG_SvcRes_UserSid)" 
+
+    #Update GmpTmpl.inf with URA and Restricted Groups
+    Add-Content -Path $gptFile -Value '[Unicode]'
+    Add-Content -Path $gptFile -Value 'Unicode=yes'
+    Add-Content -Path $gptFile -Value '[Version]'
+    Add-Content -Path $gptFile -Value 'signature="$CHICAGO$"'
+    Add-Content -Path $gptFile -Value 'Revision=1'
+    Add-Content -Path $gptFile -Value '[Group Membership]'
+    Add-Content -Path $gptFile -Value '*S-1-5-32-544__Memberof ='
+    Add-Content -Path $gptFile -Value $addConAdmin 
+    Add-Content -Path $gptFile -Value '*S-1-5-32-555__Memberof ='
+    Add-Content -Path $gptFile -Value $addConRDP 
+    Add-Content -Path $gptFile -Value '[Privilege Rights]'
+    Add-Content -Path $gptFile -Value $addConURARemote    
+
+    #Set GPMC Machine Extensions so Manual Intervention is both displayed in GPO Management and applies to target 
+    Set-ADObject -Identity $getGPOPath -Replace @{gPCMachineExtensionNames="[{827D319E-6EAC-11D2-A4EA-00C04F79F83A}{803E14A0-B4FB-11D0-A0D0-00A0C90F574B}]"}
+    Set-ADObject -Identity $getGPOPath -Replace @{versionNumber="1"}
+
+}
 
 
 <#-----------------------------
@@ -1126,13 +1264,10 @@ Service Resources
                             $ouSrvResServiceDN = "OU=$($ouSrvResOU),$($ouSrvResCompDN)"
 
                             #Function create Service Management OUs
-                            ADGroup_ServiceRes_DelegationGps($ouSrvResServiceDN,$ouSrvResOU,$ouSrvResObj,$ouMgmtResDN,$ouCompItem) 
+                            ADGroup-ServiceRes-DelegationGrp($ouSrvResServiceDN,$ouSrvResOU,$ouSrvResObj,$ouMgmtResDN,$ouCompItem) 
 
-                            write-host "Function ADGroup_ServiceRes_DelegationGps($ouSrvResServiceDN,$ouSrvResOU,$ouSrvResObj,$ouMgmtResDN,$ouCompItem) with variables passed" -ForegroundColor Green                            
-                        
-                        
-                        
-                        
+                            write-host "Function ADGroup-ServiceRes-DelegationGrp($ouSrvResServiceDN,$ouSrvResOU,$ouSrvResObj,$ouMgmtResDN,$ouCompItem) with variables passed" -ForegroundColor Green                            
+
                         }
                     }
                 }
