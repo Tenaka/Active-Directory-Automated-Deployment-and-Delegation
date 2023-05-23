@@ -1013,7 +1013,6 @@ $ouSrvResServiceDN,$ouSrvResOU
 
     $getGpoId = (Get-GPO $GPOName).id
     $getGPOPath = (Get-GPO $GPOName).path
-    $del_GPO_Edit_Acl
     Set-GPPermission -Guid $getGpoId -PermissionLevel GpoEditDeleteModifySecurity -TargetType Group -TargetName $del_DL_GPOGroupModify
 
     $sysvol = "$($smbSysvol)\domain\Policies\{$($getGpoId)}\Machine\Microsoft\Windows NT\SecEdit"
