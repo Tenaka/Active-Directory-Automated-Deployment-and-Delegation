@@ -8,7 +8,6 @@ Description.
     Basic script to deploy somthing
     The creation of OU's, GPO's and the importing of policies MUST be deployed from the PDC   
 
-
 Version.
 230510.1 - workable scripts 
 230511.1 - Functions for delegation (CreateOU)
@@ -22,7 +21,9 @@ Version.
 230519.1 - Added Write-hosts - Support and out to screen what is creating
 230519.2 - Fixed issues with Service and Management Resouces OU full delegation not working - renamed to svcRes and MgmtRes and broke if statement
 230520.1 - Delegation of Service\Client Sub management OUs
-230322.1 - Inherited and service specific Restricted Groups and URA added to GPO for Servers
+230522.1 - Inherited and service specific Restricted Groups and URA added to GPO for Servers
+230523.1 - Created Function to out to display
+230523.2 - Added Tries and if exists
 
 -----------------------------#>
 
@@ -95,6 +96,42 @@ Start Some Basic Logging
 
 <#-----------------------------
 
+Write output to screen to assist with support
+
+-----------------------------#>
+
+function Funcwriteout
+{
+<#
+
+Funcwriteout($funcname,$funcDescription,$funcComment)
+
+    [string]$funcName = "FuncName"
+    $funcDescription = "sometexthere"
+    $funcComment = "sometexthere"
+
+#>
+Write-Host " "
+Write-Host "<#-----------------------------" -ForegroundColor Green
+Write-Host "<#-----------------------------" -ForegroundColor Green
+Write-Host " "
+Write-Host "Name of function: " -ForegroundColor Green -NoNewline
+write-host " $funcName" -ForegroundColor red
+Write-Host " "
+Write-Host "Description: " -ForegroundColor Green -NoNewline
+Write-Host "$funcDescription" -ForegroundColor Green 
+Write-Host "Comment: " -ForegroundColor Green -NoNewline
+Write-Host "$funcComment" -ForegroundColor Red
+Write-Host " "
+Write-Host "-----------------------------#>" -ForegroundColor Green
+Write-Host "-----------------------------#>" -ForegroundColor Green
+Write-Host " "
+}
+
+
+
+<#-----------------------------
+
 Disable Scheduled Task and Autologon
 
 -----------------------------#>
@@ -130,13 +167,17 @@ Functions for delegating the creation of Users, Workstation or Groups etc
      OrganizationalUnit              =  bf967aa5-0de6-11d0-a285-00aa003049e2 
      User                            =  bf967aba-0de6-11d0-a285-00aa003049e2 
 
-
     delOU_UsrOU = "OU=Resources,DC=tenaka,DC=loc"
     $delOU_UsrGrp = "TESTGP"
     Delegate_User(delOU_UsrOU,$delOU_UsrGrp)
 
 -----------------------------#>
-    write-host "Function Delegate User for $GroupName at $delOU_FullOU" -ForegroundColor Green
+    #Function to write out to screen
+    [string]$funcName = "Delegate_User"
+    $funcDescription = "Function used for delegating rights for an OU to create\delete\update User objects"
+    $funcComment = "$GroupName at $delOU_FullOU"
+    Funcwriteout($funcname,$funcDescription,$funcComment)
+
     Set-Location AD:
 
     $ouACL = (get-acl -path $delOU_FullOU).Access
@@ -185,7 +226,12 @@ $delOU_GrpGrp = "TESTGP"
 Delegate_Group(delOU_GrpOU,$delOU_GrpGrp)
 
 -----------------------------#>
-    write-host "Function Delegate Group for $GroupName at $delOU_FullOU" -ForegroundColor Green   
+    #Function to write out to screen
+    [string]$funcName = "Delegate_Group"
+    $funcDescription = "Function used for delegating rights for an OU to create\delete\update Group objects"
+    $funcComment = "$GroupName at $delOU_FullOU"
+    Funcwriteout($funcname,$funcDescription,$funcComment)
+  
     Set-Location AD:
 
     $ouACL = (get-acl -path $delOU_FullOU).Access
@@ -237,7 +283,12 @@ $delOU_CompGrp = "TESTGP"
 Delegate_Computer(delOU_CompOU,$delOU_CompGrp)
 
 -----------------------------#>
-    write-host "Function Delegate Computer for $GroupName at $delOU_FullOU" -ForegroundColor Green
+    #Function to write out to screen
+    [string]$funcName = "Delegate_Computer"
+    $funcDescription = "Function used for delegating rights for an OU to create\delete\update Computer objects"
+    $funcComment = "$GroupName at $delOU_FullOU"
+    Funcwriteout($funcname,$funcDescription,$funcComment)
+
     Set-Location AD:
 
     $ouACL = (get-acl -path $delOU_FullOU).Access
@@ -288,7 +339,11 @@ $delOU_SvcAccGrp = "TESTGP"
 Delegate_SvcAccts(delOU_SvcAccOU,$delOU_SvcAccGrp)
 
 -----------------------------#>
-    write-host "Function Delegate Service Accounts for $GroupName at $delOU_FullOU" -ForegroundColor Green
+    #Function to write out to screen
+    [string]$funcName = "Delegate_SvcAccts"
+    $funcDescription = "Function used for delegating rights for an OU to create\delete\update Service Account objects"
+    $funcComment = "$GroupName at $delOU_FullOU"
+    Funcwriteout($funcname,$funcDescription,$funcComment)
 
     Set-Location AD:
 
@@ -404,7 +459,11 @@ $delOU_FullGrp = "TESTGP"
 Delegate_FullControl(delOU_FullOU,$delOU_FullGrp)
 
 -----------------------------#>
-    write-host "Function Delegate Full Control for $GroupName at $delOU_FullOU" -ForegroundColor Green
+    #Function to write out to screen
+    [string]$funcName = "Delegate_FullControl"
+    $funcDescription = "Function used for delegating rights for an OU to Full Control all object types"
+    $funcComment = "$GroupName at $delOU_FullOU"
+    Funcwriteout($funcname,$funcDescription,$funcComment)
    
     Set-Location AD:
 
@@ -461,7 +520,12 @@ Create Organisation level OU
 OU=ORG2,DC=testdom,DC=loc
 
 -----------------------------#>
-    write-host "Function CreateOU Organisation $ouOrgNameDN" -ForegroundColor Green
+    #Function to write out to screen
+    [string]$funcName = "CreateOU-OrgRoot"
+    $funcDescription = "Function to create Organisation or Top level OU"
+    $funcComment = "$ouOrgNameDN"
+    Funcwriteout($funcname,$funcDescription,$funcComment)
+
     if ($gtouOrgNameDN.DistinguishedName -ne $ouOrgNameDN)
         {
                 #Create new Organisation OU 
@@ -475,7 +539,6 @@ OU=ORG2,DC=testdom,DC=loc
         }
 }
     
-#Create Management Resource level OU
 function CreateOU-MgmtRes
 {
 <#-----------------------------
@@ -485,7 +548,12 @@ Create Management Resources
 OU=Management Resouces,OU=Org2,DC=testdom,DC=loc
 
 -----------------------------#> 
-    write-host "Function CreateOU Management Resouces at $ouOrgNameDN" -ForegroundColor Green   
+    #Function to write out to screen
+    [string]$funcName = "CreateOU-MgmtRes"
+    $funcDescription = "Function to create Management Resouces OU under that of the Organisation"
+    $funcComment = "$ouOrgNameDN"
+    Funcwriteout($funcname,$funcDescription,$funcComment)
+
     if ($gtouMgmtResDN.DistinguishedName -ne $ouMgmtResDN)
         {
             try {
@@ -498,15 +566,21 @@ OU=Management Resouces,OU=Org2,DC=testdom,DC=loc
             }
     }
 
-#Creates OU for Managment of the Service Resources
 function CreateOU-MgmtResMgmt
 {
 <#-----------------------------
 
-Start Some Basic Logging
+Create Management Resources
+
+OU=Management Resouces,OU=Org2,DC=testdom,DC=loc
 
 -----------------------------#>
-    write-host "Function CreateOU Management Resouces at $ouOrgNameDN" -ForegroundColor Green      
+    #Function to write out to screen
+    [string]$funcName = "CreateOU-MgmtResMgmt"
+    $funcDescription = "Function to create OU's under Management Resouces"
+    $funcComment = "$ouMgmtResOU"
+    Funcwriteout($funcname,$funcDescription,$funcComment)
+
     if ($ouMgmtResOUDN.DistinguishedName -ne $ouMgmtResOuDN)
         {
         try {
@@ -519,20 +593,21 @@ Start Some Basic Logging
         }
 }
 
-#Create Server Resource level OU
 function CreateOU-SrvRes
 {
 <#-----------------------------
 
-Start Some Basic Logging
+Create Service Resources
+
+OU=Service Resouces,OU=Org2,DC=testdom,DC=loc
 
 -----------------------------#>
-    #$ouSvrRes = OU to Create
-    #$ouOrgNameDN = DN of parent OU
-    #$ouProtect = Is protected
+    #Function to write out to screen
+    [string]$funcName = "CreateOU-MgmtResMgmt"
+    $funcDescription = "Function to create Service Resouce OU under that of the Organisation - contains Service or Application Resouces"
+    $funcComment = "$ouSvrRes"
+    Funcwriteout($funcname,$funcDescription,$funcComment)
     
-    #CreateOU-SvcSubMgmtOU($ouSrvResOU,$ouSrvResCompDN,$ouProtect)
-    write-host "Function CreateOU Service Resouces at $ouOrgNameDN" -ForegroundColor Green   
     if ($gtouSvrResDN.DistinguishedName -ne $ouSvrResDN )
         {
         try {
@@ -545,21 +620,19 @@ Start Some Basic Logging
         }
      }
 
-#Create Server or Application level sub-ou 
 function CreateOU-SrvComp
 {
 <#-----------------------------
 
-Start Some Basic Logging
+Creates OU for Service\Applications eg Exchange, Certs, SCOM, SCCM
 
 -----------------------------#>
-    write-host "Function CreateOU $ouCompItem at $ouSvrResDN" -ForegroundColor Green
-    #$ouSvrRes = OU to Create
-    #$ouOrgNameDN = DN of parent OU
-    #$ouProtect = Is protected
-    
-    #CreateOU-SvcSubMgmtOU($ouSrvResOU,$ouSrvResCompDN,$ouProtect)
-    
+    #Function to write out to screen
+    [string]$funcName = "CreateOU-SrvComp"
+    $funcDescription = "Function to create Service\Application OU under Service Resouces"
+    $funcComment = "$ouCompItem at $ouSvrResDN"
+    Funcwriteout($funcname,$funcDescription,$funcComment)
+   
     if ($gtouSvrResMgmtDN.DistinguishedName -ne $ouSvrCompDN)
     {
         try
@@ -568,7 +641,7 @@ Start Some Basic Logging
             }
         catch
             {
-                write-host "$ouSvrCompDN  already exists" -ForegroundColor Green
+                write-host "$ouSvrCompDN already exists" -ForegroundColor Green
             }
     }
 }
@@ -585,21 +658,25 @@ $ouProtect = Is protected
 CreateOU-SvcSubMgmtOU($ouSrvResOU,$ouSrvResCompDN,$ouProtect)
 
 -----------------------------#>
-write-host "Function CreateOU Service Management $ouSrvResOU at $ouSrvResCompDN" -ForegroundColor Green
-if ($gtouSvrResMgmtDN.DistinguishedName -ne $ouSvrResMgmtDN)
-        {
-    try 
-        {
-            New-ADOrganizationalUnit -Name $ouSrvResOU -Path $ouSrvResCompDN -ProtectedFromAccidentalDeletion $ouProtect
-            Write-Host "new AD OU $ouSrvResOU at $ouSrvResCompDN" -ForegroundColor Yellow
-        }
-    catch
-        {
-            write-host "$ouSvrResMgmtDN  already exists" -ForegroundColor Green
-        }
-    }
-}
 
+    #Function to write out to screen
+    [string]$funcName = "CreateOU-SvcSubMgmtOU"
+    $funcDescription = "Function to create Service\Application sub-OU to manage Service Accounts, Server Objects"
+    $funcComment = "$ouSrvResOU at $ouSrvResCompDN"
+    Funcwriteout($funcname,$funcDescription,$funcComment)
+
+    if ($gtouSvrResMgmtDN.DistinguishedName -ne $ouSvrResMgmtDN)
+            {
+        try 
+            {
+                New-ADOrganizationalUnit -Name $ouSrvResOU -Path $ouSrvResCompDN -ProtectedFromAccidentalDeletion $ouProtect
+            }
+        catch
+            {
+                write-host "$ouSvrResMgmtDN  already exists" -ForegroundColor Green
+            }
+        }
+}
 
 <#-----------------------------
 
@@ -614,8 +691,12 @@ function ADGroup-ManagedServerResources
 Create nested groups Domain Global into Domain Local and attach Domain Local to the object
 AL AG_Managed Resources_OU_FullCtrl
 
------------------------------#>                    
-    write-host "Function Create ADGroup Managed and Service Groups" -ForegroundColor Green
+-----------------------------#>   
+    #Function to write out to screen
+    [string]$funcName = "ADGroup-ManagedServerResources"
+    $funcDescription = "Function to create AD Groups for Restricted Groups and URA for Management\Service Resources OU"
+    $funcComment = "No Comment"
+    Funcwriteout($funcname,$funcDescription,$funcComment)
 
     #Group Acl and Description
     $del_OU_Full_Acl = "FullCtrl","Full Control of all OU objects"
@@ -629,12 +710,15 @@ AL AG_Managed Resources_OU_FullCtrl
 
     $del_GPO_Modify_ACL = "GPOModify","Edit and Modify GPO"
 
-
     #Group Descriptions
     $del_OU_Description = "Members of this group have $($del_OU_Full_Acl.split(",")[1])"
     $del_RG_Admin_Description = "Members of this group have $($del_ResGrp_Admin.split(",")[1])"
     $del_RG_User_Description = "Members of this group have $($del_ResGrp_User.split(",")[1])"
-
+    $del_GP_SvcAtts_Description = "Members of this group have $($del_OU_Service_Acl.split(",")[1])"
+    $del_GP_Compu_Description = "Members of this group have $($del_OU_Computer_Acl.split(",")[1])"
+    $del_GP_Group_Description = "Members of this group have $($del_OU_Group_Acl.split(",")[1])"
+    $del_GP_User_Description = "Members of this group have $($del_OU_User_Acl.split(",")[1])"
+    $del_GPO_GPOEdit_Description = "Members of this group have $($del_GPO_Edit_Acl.split(",")[1])"
     $del_GPO_Modify_Description = "Members of this group have $($del_GPO_Modify_ACL.split(",")[1])"
 
     #Local and Global
@@ -686,14 +770,14 @@ AL AG_Managed Resources_OU_FullCtrl
         if ($del_OUGroupName -like "$del_DomainGlobal*")
             {
                 #OU Delegation Group
-                New-ADGroup $del_OUGroupName –groupscope Global -Path $adTasksDestination -Description $del_OU_Description  
-                
+
+                try{New-ADGroup $del_OUGroupName –groupscope Global -Path $adTasksDestination -Description $del_OU_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
                 #Restriced Group 
-                New-ADGroup $del_RGGroupNameAdmin –groupscope Global -Path $adTasksDestination -Description $del_RG_Admin_Description
-                New-ADGroup $del_RGGroupNameUser –groupscope Global -Path $adTasksDestination -Description $del_RG_User_Description 
+                try{New-ADGroup $del_RGGroupNameAdmin –groupscope Global -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+                try{New-ADGroup $del_RGGroupNameUser –groupscope Global -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen} 
                 
                 #GPO Modify
-                New-ADGroup $del_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description
+                try{New-ADGroup $del_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
 
                 #Add to array for group nesting
                 $new_OUGroupName+="$($del_OUGroupName)"
@@ -704,14 +788,14 @@ AL AG_Managed Resources_OU_FullCtrl
         elseif ($del_OUGroupName -like "$del_DomainLocal*")
             {
                 #OU Delegation Group
-                New-ADGroup $del_OUGroupName –groupscope DomainLocal -Path $adTasksDestination -Description $del_OU_Description  
+                try{New-ADGroup $del_OUGroupName –groupscope DomainLocal -Path $adTasksDestination -Description $del_OU_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}  
                 
                 #Restriced Group 
-                New-ADGroup $del_RGGroupNameAdmin –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_Admin_Description
-                New-ADGroup $del_RGGroupNameUser –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_User_Description
+                try{New-ADGroup $del_RGGroupNameAdmin –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+                try{New-ADGroup $del_RGGroupNameUser –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
 
                 #GPO Modify
-                New-ADGroup $del_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description
+                try{New-ADGroup $del_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
 
                 #$delOU_FullOU=@()
                 #$groupName=@()
@@ -728,7 +812,6 @@ AL AG_Managed Resources_OU_FullCtrl
                 $del_RG_DL_SvcResAdmin = Get-ADGroup $del_RGGroupNameAdmin
                 $del_RG_DL_SvcResUser = Get-ADGroup $del_RGGroupNameUser
              
-                write-host "Function GPO-ServiceResource-URA-ResGps($gpoName,$del_RG_DL_SvcResAdmin,$del_RG_DL_SvcResUser,$ouOrgName,$del_GPOGroupModify) and variables passed" -ForegroundColor Red
                 GPO-ServiceResource-URA-ResGps($gpoName,$del_RG_DL_SvcResAdmin,$del_RG_DL_SvcResUser,$ouOrgName,$del_GPOGroupModify)
                 
                 #Add to array for group nesting
@@ -759,14 +842,17 @@ AL AG_Managed Resources_OU_FullCtrl
 function ADGroup-ServiceRes-DelegationGrp 
 {
 <#-----------------------------
-
                     
 Create nested groups Domain Global into Domain Local and attach Domain Local to the object
 AL AG_Managed Resources_OU_FullCtrl
 
 -----------------------------#> 
 #>
-    write-host "Function Create ADGroup Delegation Groups" -ForegroundColor Green
+    #Function to write out to screen
+    [string]$funcName = "ADGroup-ServiceRes-DelegationGrp"
+    $funcDescription = "Function to create AD Groups for delegation of Service\Application sub-Ous, Service Accounts, Servers etc"
+    $funcComment = "No Comment"
+    Funcwriteout($funcname,$funcDescription,$funcComment)
 
     #Group Acl and Description
     $del_OU_Full_Acl = "FullCtrl","Full Control of all OU objects"
@@ -786,7 +872,18 @@ AL AG_Managed Resources_OU_FullCtrl
     $adTasksDestination=@()
     $SvcResTrun=@()
 
-    #Truncate Service Resouce
+    #Group Descriptions
+    $del_OU_Description = "Members of this group have $($del_OU_Full_Acl.split(",")[1])"
+    $del_RG_Admin_Description = "Members of this group have $($del_ResGrp_Admin.split(",")[1])"
+    $del_RG_User_Description = "Members of this group have $($del_ResGrp_User.split(",")[1])"
+    $del_GP_SvcAtts_Description = "Members of this group have $($del_OU_Service_Acl.split(",")[1])"
+    $del_GP_Compu_Description = "Members of this group have $($del_OU_Computer_Acl.split(",")[1])"
+    $del_GP_Group_Description = "Members of this group have $($del_OU_Group_Acl.split(",")[1])"
+    $del_GP_User_Description = "Members of this group have $($del_OU_User_Acl.split(",")[1])"
+    $del_GPO_GPOEdit_Description = "Members of this group have $($del_GPO_Edit_Acl.split(",")[1])"
+    $del_GPO_Modify_Description = "Members of this group have $($del_GPO_Modify_ACL.split(",")[1])"
+
+    #Truncate Service Resouce - to limit character limit for groups
     $SvcResTrun = "SvcRes"
 
     if ($ouSrvResOU -eq "Application Groups"){$ouSrvResOU = "AppGrp"}
@@ -795,21 +892,31 @@ AL AG_Managed Resources_OU_FullCtrl
     $adTasksDestination = "OU=AD Tasks,$($ouMgmtResDN)" 
 
     if ($ouSrvResObj -eq "Group")
-    {$groupSub = $del_OU_Group_Acl}
-
+    {
+        $groupSub = $del_OU_Group_Acl
+        $del_Description = $del_GP_Group_Description
+    }
 
     if ($ouSrvResObj -eq "User")
-    {$groupSub = $del_OU_User_Acl}
-
-
+    {
+        $groupSub = $del_OU_User_Acl
+        $del_Description = $del_GP_User_Description
+    }
+    
     if ($ouSrvResObj -eq "Computer")
-    {$groupSub = $del_OU_Computer_Acl}
+    {
+        $groupSub = $del_OU_Computer_Acl
+        $del_Description = $del_GP_Compu_Description
+    }
 
     if ($ouSrvResObj -eq "SvcAccts")
-    {$groupSub = $del_OU_Service_Acl}    
+    {
+        $groupSub = $del_OU_Service_Acl
+        $del_Description = $del_GP_SvcAtts_Description
+    }    
 
     #Group Descriptions
-    $del_Description = "Members of this group have $($groupSub.split(",")[1])"
+    #$del_Description = "Members of this group have $($groupSub.split(",")[1])"
 
     #Local and Global
     $del_DomainLocal = "AL_"
@@ -819,18 +926,13 @@ AL AG_Managed Resources_OU_FullCtrl
     $del_DL_SrvOUGroup = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($groupSub.split(",")[0])"
     $del_DG_SrvOUGroup = "$($del_DomainGlobal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($groupSub.split(",")[0])"
 
-    New-ADGroup $del_DL_SrvOUGroup –groupscope DomainLocal -Path $adTasksDestination -Description $del_Description
-    New-ADGroup $del_DG_SrvOUGroup –groupscope Global -Path $adTasksDestination -Description $del_Description
+    try{New-ADGroup $del_DL_SrvOUGroup –groupscope DomainLocal -Path $adTasksDestination -Description $del_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+    try{New-ADGroup $del_DG_SrvOUGroup –groupscope Global -Path $adTasksDestination -Description $del_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
     
     Add-ADGroupMember $del_DL_SrvOUGroup $del_DG_SrvOUGroup
 
     $GroupName = $del_DL_SrvOUGroup 
     $delOU_FullOU = $ouSrvResServiceDN
-
-    Write-Host "$adTasksDestination - Server Management groups" -ForegroundColor DarkYellow
-    Write-Host "$del_DL_SrvOUGroup - new group" -ForegroundColor Yellow
-    Write-Host "$del_DG_SrvOUGroup - new group" -ForegroundColor Yellow
-    Write-Host " "
 
     #Delegate group to OU with acls required
     if ($ouSrvResObj -eq "Group")
@@ -849,7 +951,6 @@ AL AG_Managed Resources_OU_FullCtrl
     {
         Delegate_Computer($GroupName,$delOU_FullOU)   
 
-        Write-Host "Delegation_SvcAccts($GroupName,$delOU_FullOU)" -ForegroundColor Red
         Delegation_SvcAccts($GroupName,$delOU_FullOU)  
         #pause
 
@@ -863,18 +964,17 @@ AL AG_Managed Resources_OU_FullCtrl
         #GPO Modify
         $del_DL_GPOGroupModify = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_GPO_Modify_ACL.split(",")[0])"
         $del_DG_GPOGroupModify = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_GPO_Modify_ACL.split(",")[0])"
-        
-
+   
         #Restriced Group 
-        New-ADGroup $del_DL_RGGroupNameAdmin –groupscope Global -Path $adTasksDestination -Description $del_RG_Admin_Description
-        New-ADGroup $del_DG_RGGroupNameAdmin –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_Admin_Description
+        try{New-ADGroup $del_DL_RGGroupNameAdmin –groupscope Global -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+        try{New-ADGroup $del_DG_RGGroupNameAdmin –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
         
-        New-ADGroup $del_DL_RGGroupNameUser –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_User_Description
-        New-ADGroup $del_DG_RGGroupNameUser –groupscope Global -Path $adTasksDestination -Description $del_RG_User_Description 
+        try{New-ADGroup $del_DL_RGGroupNameUser –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+        try{New-ADGroup $del_DG_RGGroupNameUser –groupscope Global -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
                 
         #GPO Modify
-        New-ADGroup $del_DL_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description
-        New-ADGroup $del_DG_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description
+        try{New-ADGroup $del_DL_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+        try{New-ADGroup $del_DG_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
 
         $gpoName = "GPO_$($ouOrgName)_$($ouSvrRes)_$($ouCompItem)_$($ouSrvResOU)_Custom"
 
@@ -884,7 +984,6 @@ AL AG_Managed Resources_OU_FullCtrl
         GPO-ServerOU-URA-ResGps($gpoName,$ouSrvResServiceDN,$ouSrvResOU,$del_RG_DL_ServerAdmin, $del_RG_DL_ServerUser,$del_DL_GPOGroupModify)        
     }
 }
-
 
 <#-----------------------------
 
@@ -900,7 +999,12 @@ OU=AD Tasks,OU=Service Resources,OU=Org3,DC=testdom,DC=loc
 AL_OU_ORG1_SvcRes_SCCM_URA_GroupMgmt
 
 -----------------------------#>
-    write-host "Function GPO Restricted Group for Services at $GPOName" -ForegroundColor Green
+    #Function to write out to screen
+    [string]$funcName = "GPO-ServiceResource-URA-ResGps"
+    $funcDescription = "Function to create Service Resouce OU level GPO and set Restricted Groups and URA for Admin and User Access plus Logon via RDP"
+    $funcComment = "No Comment"
+    Funcwriteout($funcname,$funcDescription,$funcComment)
+
     #Root of the domain
     $rootDSE = (Get-ADRootDSE).rootDomainNamingContext
 
@@ -916,56 +1020,63 @@ AL_OU_ORG1_SvcRes_SCCM_URA_GroupMgmt
     Create Member Server top level GPO and set Restricted Groups and URA
 
     -----------------------------#>
-    $getOUMS = Get-ADOrganizationalUnit -Filter * | where {$_.DistinguishedName -eq $ouSvrResDN} 
-    #New GPO based on the service and linked to OU
-    New-GPO -Name $GPOName | New-GPLink -Target $getOUMS.DistinguishedName
+    $gtGPO=@()
+    $gtGPO = Get-GPO -Name $GPOName
+    if ($gtgpo.id -eq $null)
+    {
+        $getOUMS = Get-ADOrganizationalUnit -Filter * | where {$_.DistinguishedName -eq $ouSvrResDN} 
+        #New GPO based on the service and linked to OU
+        New-GPO -Name $GPOName | New-GPLink -Target $getOUMS.DistinguishedName
 
-    $getGpoId = (Get-GPO $GPOName).id
-    $getGPOPath = (Get-GPO $GPOName).path
-    $del_GPO_Edit_Acl
-    Set-GPPermission -Guid $getGpoId -PermissionLevel GpoEditDeleteModifySecurity -TargetType Group -TargetName $del_GPOGroupModify
+        $getGpoId = (Get-GPO $GPOName).id
+        $getGPOPath = (Get-GPO $GPOName).path
+        $del_GPO_Edit_Acl
+        Set-GPPermission -Guid $getGpoId -PermissionLevel GpoEditDeleteModifySecurity -TargetType Group -TargetName $del_GPOGroupModify
 
-    $sysvol = "$($smbSysvol)\domain\Policies\{$($getGpoId)}\Machine\Microsoft\Windows NT\SecEdit"
-    $gpt = "$($smbSysvol)\domain\Policies\{$($getGpoId)}\GPT.ini"
-    Set-content $gpt -Value "[General]"
-    Add-Content $gpt -Value "Version=1" 
+        $sysvol = "$($smbSysvol)\domain\Policies\{$($getGpoId)}\Machine\Microsoft\Windows NT\SecEdit"
+        $gpt = "$($smbSysvol)\domain\Policies\{$($getGpoId)}\GPT.ini"
+        Set-content $gpt -Value "[General]"
+        Add-Content $gpt -Value "Version=1" 
 
-    New-Item -Path $sysvol -ItemType Directory -Force
-    New-Item -Path $sysvol -Name GptTmpl.inf -ItemType File -Force
+        New-Item -Path $sysvol -ItemType Directory -Force
+        New-Item -Path $sysvol -Name GptTmpl.inf -ItemType File -Force
 
-    $gptFile = "$($sysvol)\GptTmpl.inf"
+        $gptFile = "$($sysvol)\GptTmpl.inf"
 
-    #S-1-5-32-544 = Administrator Group
-    #S-1-5-32-555 = Remote Desktop Group
-    #SeRemoteInteractiveLogonRight = Allow log on through Remote Desktop Services
+        #S-1-5-32-544 = Administrator Group
+        #S-1-5-32-555 = Remote Desktop Group
+        #SeRemoteInteractiveLogonRight = Allow log on through Remote Desktop Services
 
-    #Admin Group Sids for Restricted Groups
-    $addConAdmin = "*S-1-5-32-544__Members = *$($gt_del_RG_SvcRes_AdminSid)"
-    #RDP Group Sids for Restricted Groups
-    $addConRDP = "*S-1-5-32-555__Members = *$($gt_del_RG_SvcRes_UserSid)" 
+        #Admin Group Sids for Restricted Groups
+        $addConAdmin = "*S-1-5-32-544__Members = *$($gt_del_RG_SvcRes_AdminSid)"
+        #RDP Group Sids for Restricted Groups
+        $addConRDP = "*S-1-5-32-555__Members = *$($gt_del_RG_SvcRes_UserSid)" 
 
-    #User Rights Assignments
-    $addConURARemote = "SeRemoteInteractiveLogonRight = *$($gt_del_RG_SvcRes_AdminSid),*$($gt_del_RG_SvcRes_UserSid)" 
+        #User Rights Assignments
+        $addConURARemote = "SeRemoteInteractiveLogonRight = *$($gt_del_RG_SvcRes_AdminSid),*$($gt_del_RG_SvcRes_UserSid)" 
 
-    #Update GmpTmpl.inf with URA and Restricted Groups
-    Add-Content -Path $gptFile -Value '[Unicode]'
-    Add-Content -Path $gptFile -Value 'Unicode=yes'
-    Add-Content -Path $gptFile -Value '[Version]'
-    Add-Content -Path $gptFile -Value 'signature="$CHICAGO$"'
-    Add-Content -Path $gptFile -Value 'Revision=1'
-    Add-Content -Path $gptFile -Value '[Group Membership]'
-    Add-Content -Path $gptFile -Value '*S-1-5-32-544__Memberof ='
-    Add-Content -Path $gptFile -Value $addConAdmin 
-    Add-Content -Path $gptFile -Value '*S-1-5-32-555__Memberof ='
-    Add-Content -Path $gptFile -Value $addConRDP 
-    Add-Content -Path $gptFile -Value '[Privilege Rights]'
-    Add-Content -Path $gptFile -Value $addConURARemote    
+        #Update GmpTmpl.inf with URA and Restricted Groups
+        Add-Content -Path $gptFile -Value '[Unicode]'
+        Add-Content -Path $gptFile -Value 'Unicode=yes'
+        Add-Content -Path $gptFile -Value '[Version]'
+        Add-Content -Path $gptFile -Value 'signature="$CHICAGO$"'
+        Add-Content -Path $gptFile -Value 'Revision=1'
+        Add-Content -Path $gptFile -Value '[Group Membership]'
+        Add-Content -Path $gptFile -Value '*S-1-5-32-544__Memberof ='
+        Add-Content -Path $gptFile -Value $addConAdmin 
+        Add-Content -Path $gptFile -Value '*S-1-5-32-555__Memberof ='
+        Add-Content -Path $gptFile -Value $addConRDP 
+        Add-Content -Path $gptFile -Value '[Privilege Rights]'
+        Add-Content -Path $gptFile -Value $addConURARemote    
 
-    #Set GPMC Machine Extensions so Manual Intervention is both displayed in GPO Management and applies to target 
-    Set-ADObject -Identity $getGPOPath -Replace @{gPCMachineExtensionNames="[{827D319E-6EAC-11D2-A4EA-00C04F79F83A}{803E14A0-B4FB-11D0-A0D0-00A0C90F574B}]"}
-    Set-ADObject -Identity $getGPOPath -Replace @{versionNumber="1"}
-
-
+        #Set GPMC Machine Extensions so Manual Intervention is both displayed in GPO Management and applies to target 
+        Set-ADObject -Identity $getGPOPath -Replace @{gPCMachineExtensionNames="[{827D319E-6EAC-11D2-A4EA-00C04F79F83A}{803E14A0-B4FB-11D0-A0D0-00A0C90F574B}]"}
+        Set-ADObject -Identity $getGPOPath -Replace @{versionNumber="1"}
+    }
+    else
+    {
+        Write-Host "$GPOName already exists" -ForegroundColor DarkGreen
+    }
 }
 
 Function GPO-ServerOU-URA-ResGps
@@ -978,7 +1089,12 @@ AL_OU_ORG1_SvcRes_SCCM_URA_GroupMgmt
 $ouSrvResServiceDN,$ouSrvResOU
 
 -----------------------------#>
-    write-host "Function GPO Restricted Group for Services at $GPOName" -ForegroundColor Green
+    #Function to write out to screen
+    [string]$funcName = "GPO-ServiceResource-URA-ResGps"
+    $funcDescription = "Function to create Service\Application OU level GPO and set Restricted Groups and URA for Admin and User Access plus Logon via RDP"
+    $funcComment = "$GPOName"
+    Funcwriteout($funcname,$funcDescription,$funcComment)
+
     #Root of the domain
     $rootDSE = (Get-ADRootDSE).rootDomainNamingContext
 
@@ -991,15 +1107,12 @@ $ouSrvResServiceDN,$ouSrvResOU
     $del_DL_RG_SvcRes_Admin = "$($del_DomainLocal)RG_$($ouOrgName)_$($SvcResTrun)_$($del_ResGrp_Admin.split(",")[0])"
     $del_DL_RG_SvcRes_User = "$($del_DomainLocal)RG_$($ouOrgName)_$($SvcResTrun)_$($del_ResGrp_User.split(",")[0])"
 
-    Write-host $del_RGGroupNameAdmin -ForegroundColor Magenta
-
     #Service Resource
     $gt_RG_DL_SvcRes_Admin = Get-ADGroup $del_DL_RG_SvcRes_Admin
     $gt_RG_DL_SvcRes_User = Get-ADGroup $del_DL_RG_SvcRes_User
 
     $gt_del_RG_SvcRes_AdminSid = $gt_RG_DL_SvcRes_Admin.SID.Value
     $gt_del_RG_SvcRes_UserSid = $gt_RG_DL_SvcRes_User.SID.Value
-
 
     #Server Admin
     $gt_del_RG_Svc_SrvAdminSid = $del_RG_DL_ServerAdmin.SID.Value
@@ -1010,56 +1123,65 @@ $ouSrvResServiceDN,$ouSrvResOU
     Create Member Server top level GPO and set Restricted Groups and URA
 
     -----------------------------#>
-    $getOUMS = Get-ADOrganizationalUnit -Filter * | where {$_.DistinguishedName -eq $ouSrvResServiceDN} 
-    #New GPO based on the service and linked to OU
-    New-GPO -Name $GPOName | New-GPLink -Target $getOUMS.DistinguishedName
+    $gtGPO=@()
+    $gtGPO = Get-GPO -Name $GPOName -ErrorAction SilentlyContinue
 
-    $getGpoId = (Get-GPO $GPOName).id
-    $getGPOPath = (Get-GPO $GPOName).path
-    Set-GPPermission -Guid $getGpoId -PermissionLevel GpoEditDeleteModifySecurity -TargetType Group -TargetName $del_DL_GPOGroupModify
+    if ($gtgpo.id -eq $null)
+    {
+        $getOUMS = Get-ADOrganizationalUnit -Filter * | where {$_.DistinguishedName -eq $ouSrvResServiceDN} 
+        #New GPO based on the service and linked to OU
+        New-GPO -Name $GPOName | New-GPLink -Target $getOUMS.DistinguishedName
 
-    $sysvol = "$($smbSysvol)\domain\Policies\{$($getGpoId)}\Machine\Microsoft\Windows NT\SecEdit"
-    $gpt = "$($smbSysvol)\domain\Policies\{$($getGpoId)}\GPT.ini"
-    Set-content $gpt -Value "[General]"
-    Add-Content $gpt -Value "Version=1" 
+        $getGpoId = (Get-GPO $GPOName).id
+        $getGPOPath = (Get-GPO $GPOName).path
+        Set-GPPermission -Guid $getGpoId -PermissionLevel GpoEditDeleteModifySecurity -TargetType Group -TargetName $del_DL_GPOGroupModify
 
-    New-Item -Path $sysvol -ItemType Directory -Force
-    New-Item -Path $sysvol -Name GptTmpl.inf -ItemType File -Force
+        $sysvol = "$($smbSysvol)\domain\Policies\{$($getGpoId)}\Machine\Microsoft\Windows NT\SecEdit"
+        $gpt = "$($smbSysvol)\domain\Policies\{$($getGpoId)}\GPT.ini"
+        Set-content $gpt -Value "[General]"
+        Add-Content $gpt -Value "Version=1" 
 
-    $gptFile = "$($sysvol)\GptTmpl.inf"
+        New-Item -Path $sysvol -ItemType Directory -Force
+        New-Item -Path $sysvol -Name GptTmpl.inf -ItemType File -Force
 
-    #S-1-5-32-544 = Administrator Group
-    #S-1-5-32-555 = Remote Desktop Group
-    #SeRemoteInteractiveLogonRight = Allow log on through Remote Desktop Services
+        $gptFile = "$($sysvol)\GptTmpl.inf"
 
-    #Admin Group Sids for Restricted Groups
-    $addConAdmin = "*S-1-5-32-544__Members = *$($gt_del_RG_Svc_SrvAdminSid),*$($gt_del_RG_SvcRes_AdminSid)"
-    #RDP Group Sids for Restricted Groups
-    $addConRDP = "*S-1-5-32-555__Members = *$($gt_del_RG_Svc_SrvUserSid),*$($gt_del_RG_SvcRes_UserSid)" 
+        #S-1-5-32-544 = Administrator Group
+        #S-1-5-32-555 = Remote Desktop Group
+        #SeRemoteInteractiveLogonRight = Allow log on through Remote Desktop Services
 
-    #User Rights Assignments
-    $addConURARemote = "SeRemoteInteractiveLogonRight = *$($gt_del_RG_Svc_SrvAdminSid),*$($gt_del_RG_Svc_SrvUserSid),*$($gt_del_RG_SvcRes_AdminSid),*$($gt_del_RG_SvcRes_UserSid)" 
+        #Admin Group Sids for Restricted Groups
+        $addConAdmin = "*S-1-5-32-544__Members = *$($gt_del_RG_Svc_SrvAdminSid),*$($gt_del_RG_SvcRes_AdminSid)"
+        #RDP Group Sids for Restricted Groups
+        $addConRDP = "*S-1-5-32-555__Members = *$($gt_del_RG_Svc_SrvUserSid),*$($gt_del_RG_SvcRes_UserSid)" 
 
-    #Update GmpTmpl.inf with URA and Restricted Groups
-    Add-Content -Path $gptFile -Value '[Unicode]'
-    Add-Content -Path $gptFile -Value 'Unicode=yes'
-    Add-Content -Path $gptFile -Value '[Version]'
-    Add-Content -Path $gptFile -Value 'signature="$CHICAGO$"'
-    Add-Content -Path $gptFile -Value 'Revision=1'
-    Add-Content -Path $gptFile -Value '[Group Membership]'
-    Add-Content -Path $gptFile -Value '*S-1-5-32-544__Memberof ='
-    Add-Content -Path $gptFile -Value $addConAdmin 
-    Add-Content -Path $gptFile -Value '*S-1-5-32-555__Memberof ='
-    Add-Content -Path $gptFile -Value $addConRDP 
-    Add-Content -Path $gptFile -Value '[Privilege Rights]'
-    Add-Content -Path $gptFile -Value $addConURARemote    
+        #User Rights Assignments
+        $addConURARemote = "SeRemoteInteractiveLogonRight = *$($gt_del_RG_Svc_SrvAdminSid),*$($gt_del_RG_Svc_SrvUserSid),*$($gt_del_RG_SvcRes_AdminSid),*$($gt_del_RG_SvcRes_UserSid)" 
 
-    #Set GPMC Machine Extensions so Manual Intervention is both displayed in GPO Management and applies to target 
-    Set-ADObject -Identity $getGPOPath -Replace @{gPCMachineExtensionNames="[{827D319E-6EAC-11D2-A4EA-00C04F79F83A}{803E14A0-B4FB-11D0-A0D0-00A0C90F574B}]"}
-    Set-ADObject -Identity $getGPOPath -Replace @{versionNumber="1"}
+        #Update GmpTmpl.inf with URA and Restricted Groups
+        Add-Content -Path $gptFile -Value '[Unicode]'
+        Add-Content -Path $gptFile -Value 'Unicode=yes'
+        Add-Content -Path $gptFile -Value '[Version]'
+        Add-Content -Path $gptFile -Value 'signature="$CHICAGO$"'
+        Add-Content -Path $gptFile -Value 'Revision=1'
+        Add-Content -Path $gptFile -Value '[Group Membership]'
+        Add-Content -Path $gptFile -Value '*S-1-5-32-544__Memberof ='
+        Add-Content -Path $gptFile -Value $addConAdmin 
+        Add-Content -Path $gptFile -Value '*S-1-5-32-555__Memberof ='
+        Add-Content -Path $gptFile -Value $addConRDP 
+        Add-Content -Path $gptFile -Value '[Privilege Rights]'
+        Add-Content -Path $gptFile -Value $addConURARemote    
+
+        #Set GPMC Machine Extensions so Manual Intervention is both displayed in GPO Management and applies to target 
+        Set-ADObject -Identity $getGPOPath -Replace @{gPCMachineExtensionNames="[{827D319E-6EAC-11D2-A4EA-00C04F79F83A}{803E14A0-B4FB-11D0-A0D0-00A0C90F574B}]"}
+        Set-ADObject -Identity $getGPOPath -Replace @{versionNumber="1"}
+    }
+    else
+    {
+        Write-Host "$GPOName already exists" -ForegroundColor DarkGreen
+    }
 
 }
-
 
 <#-----------------------------
 
@@ -1124,14 +1246,6 @@ Import JSON for OU configuration
             #Defines Application\Services OUs and Object type eg Servers = Computer, ApplicationGroup = Groups
             $ouSrvRes = $ou.ServersResources
 
-            write-host $ouOrgName
-            write-host $ouParent
-            write-host $ouType
-            write-host $ouMgmtRoot
-            write-host $ouMgmtRes
-            write-host $ouComp
-            write-host $ouSrvRes
-
 <#-----------------------------
 
 Create Organisation OU Top Level
@@ -1143,7 +1257,6 @@ Create Organisation OU Top Level
             $ouOrgNameDN = "OU=$($ouOrgName),$($rootDSE)"
             $gtOUName = try {Get-ADOrganizationalUnit -filter * | where {$_.DistinguishedName -eq $ouOrgNameDN}} catch {}
             CreateOU-OrgRoot($ouOrgName,$ouProtect)
-            write-host "Function CreateOU-OrgRoot($ouOrgName,$ouProtect) with variables passed" -ForegroundColor Green
 
 <#-----------------------------
 
@@ -1183,7 +1296,6 @@ Managed Resources
                     #Function Create Grouos for Managed Resources OU
                     $ManSrvChoice = "Managed"
                     ADGroup-ManagedServerResources($ManSrvChoice,$ouSvrResDN)  
-
                 }
 <#-----------------------------
 
@@ -1201,10 +1313,7 @@ Service Resources
                     $ouSvrResDN = "OU=$($ouSvrRes),$($ouOrgNameDN)"
                     $gtouSvrResDN = try {Get-ADOrganizationalUnit $ouSvrResDN -ErrorAction SilentlyContinue} catch {}
                     
-                    Write-Host "Create Service Management OU - ura servers" -ForegroundColor Cyan
-                    Write-Host "$ouSvrResDN" -ForegroundColor Green
-
-                    #Function - 
+                    #Function
                     CreateOU-SrvRes($ouSvrRes,$ouOrgNameDN,$ouProtect)    
               
                     #select the Service Resources to create sub-OUs
@@ -1221,7 +1330,6 @@ Service Resources
                     $ouCompSplit = $ouComp.split(",")
                     foreach ($ouCompItem in $ouCompSplit)
                     {
-                        Write-Host "$ouCompItem" -ForegroundColor Green
                         #Function to create managment OU for each Application or Service eg SCCM, SCOM, Exchange
                         $ouSvrCompDN=@()
                         $gtouSvrResMgmtDN=@()
@@ -1229,12 +1337,8 @@ Service Resources
                         $ouSvrCompDN = "OU=$($ouCompItem),$($ouSvrResDN)"
                         $gtouSvrResMgmtDN = try {Get-ADOrganizationalUnit $ouSvrCompDN -ErrorAction SilentlyContinue} catch {}
                         
-                        Write-Host "$ouSvrCompDN" -ForegroundColor Magenta
-
                         #Function
                         CreateOU-SrvComp($ouCompItem,$ouSvrResDN,$ouProtect)
-
-                        Write-Host "function CreateOU-SrvCompy $ouCompItem"
 
                         #Create management OUs for each Applications or Service
                         #OU=SCCM,OU=Service Resources,OU=not193,DC=testdom,DC=loc 
@@ -1243,10 +1347,6 @@ Service Resources
                         {                            
                             $ouSrvResOU = $ouSrvResItem.split(",")[0]
                             $ouSrvResObj = $ouSrvResItem.split(",")[1]
-
-                            Write-Host "$ouSrvResItem" -ForegroundColor Gray
-                            Write-Host "$ouSrvResOU" -ForegroundColor Green
-                            Write-Host "$ouSrvResObj" -ForegroundColor Green
                             
                             #Function to create managment OU for each Application or Service eg SCCM, SCOM, Exchange
                             $ouSvrResMgmtDN=@()
@@ -1254,22 +1354,15 @@ Service Resources
 
                             $ouSvrResMgmtDN = "OU=$($ouSrvResOU),$($ouSrvResCompDN)"
                             $gtouSvrResMgmtDN = try {Get-ADOrganizationalUnit $ouSvrResMgmtDN -ErrorAction SilentlyContinue} catch {}
-                            
-                            Write-Host "$ouSvrResMgmtDN" -ForegroundColor Magenta
 
                             #Function
                             CreateOU-SvcSubMgmtOU($ouSrvResOU,$ouSrvResCompDN,$ouProtect,$ouSvrResDN,$ouCompItem)
 
-                            write-host "Function CreateOU-SvcSubMgmtOU($ouSrvResOU,$ouSrvResCompDN,$ouProtect,$ouSvrResDN,$ouCompItem) with variables passed" -ForegroundColor Green
-                            
                             $ouSrvResServiceDN=@()
                             $ouSrvResServiceDN = "OU=$($ouSrvResOU),$($ouSrvResCompDN)"
 
                             #Function create Service Management OUs
                             ADGroup-ServiceRes-DelegationGrp($ouSrvResServiceDN,$ouSrvResOU,$ouSrvResObj,$ouMgmtResDN,$ouCompItem,$ouSvrRes) 
-
-                            write-host "Function ADGroup-ServiceRes-DelegationGrp($ouSrvResServiceDN,$ouSrvResOU,$ouSrvResObj,$ouMgmtResDN,$ouCompItem) with variables passed" -ForegroundColor Green                            
-
                         }
                     }
                 }
