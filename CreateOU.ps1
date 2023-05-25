@@ -267,9 +267,8 @@ Delegate_Group(delOU_GrpOU,$delOU_GrpGrp)
     $InheritedObjectType = [guid] "00000000-0000-0000-0000-000000000000"
     $ACE = New-Object System.DirectoryServices.ActiveDirectoryAccessRule $gpIndent, $ActiveDirectoryRights, $AccessControlType, $ObjectType, $InheritanceType, $InheritedObjectType
 
-
-     $ouACL.AddAccessRule($ACE)
-     Set-Acl -Path $delOU_FullOU -AclObject $ouACL
+    $ouACL.AddAccessRule($ACE)
+    Set-Acl -Path $delOU_FullOU -AclObject $ouACL
 
 
 }
@@ -770,8 +769,8 @@ AL AG_Managed Resources_OU_FullCtrl
         if ($del_OUGroupName -like "$del_DomainGlobal*")
             {
                 #OU Delegation Group
-
                 try{New-ADGroup $del_OUGroupName –groupscope Global -Path $adTasksDestination -Description $del_OU_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+                
                 #Restriced Group 
                 try{New-ADGroup $del_RGGroupNameAdmin –groupscope Global -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
                 try{New-ADGroup $del_RGGroupNameUser –groupscope Global -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen} 
@@ -808,9 +807,14 @@ AL AG_Managed Resources_OU_FullCtrl
                 Delegate_FullControl($delOU_FullOU,$GroupName)  
                               
                 #Get New Group Name and SID
+                $gt_del_RG_SvcRes_AdminSid=@()
+                $del_RG_DL_SvcResUser=@()
                 $gpoName = "GPO_$($ouOrgName)_$($ouSvrRes)_Custom"
                 $del_RG_DL_SvcResAdmin = Get-ADGroup $del_RGGroupNameAdmin
                 $del_RG_DL_SvcResUser = Get-ADGroup $del_RGGroupNameUser
+
+                write-host $del_RGGroupNameAdmin -ForegroundColor Red
+                write-host $del_RGGroupNameAdmin -ForegroundColor Red
              
                 GPO-ServiceResource-URA-ResGps($gpoName,$del_RG_DL_SvcResAdmin,$del_RG_DL_SvcResUser,$ouOrgName,$del_GPOGroupModify)
                 
@@ -968,13 +972,16 @@ AL AG_Managed Resources_OU_FullCtrl
         #Restriced Group 
         try{New-ADGroup $del_DL_RGGroupNameAdmin –groupscope Global -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
         try{New-ADGroup $del_DG_RGGroupNameAdmin –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
-        
+        Add-ADGroupMember $del_DL_RGGroupNameAdmin $del_DG_RGGroupNameAdmin
+
         try{New-ADGroup $del_DL_RGGroupNameUser –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
         try{New-ADGroup $del_DG_RGGroupNameUser –groupscope Global -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+        Add-ADGroupMember $del_DL_RGGroupNameUser $del_DG_RGGroupNameUser
                 
         #GPO Modify
         try{New-ADGroup $del_DL_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
         try{New-ADGroup $del_DG_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+        Add-ADGroupMember $del_DL_GPOGroupModify $del_DG_GPOGroupModify
 
         $gpoName = "GPO_$($ouOrgName)_$($ouSvrRes)_$($ouCompItem)_$($ouSrvResOU)_Custom"
 
@@ -1012,6 +1019,8 @@ AL_OU_ORG1_SvcRes_SCCM_URA_GroupMgmt
     $smbSysVol = ((Get-SmbShare -name "sysvol").path).replace("SYSVOL\sysvol","sysvol")
 
     #Get New Group Name and SID
+    Write-Host $del_RG_DL_SvcResUser -ForegroundColor Yellow
+    write-host $del_RG_DL_SvcResAdmin -ForegroundColor Yellow
     $gt_del_RG_SvcRes_AdminSid = $del_RG_DL_SvcResAdmin.SID.Value
     $gt_del_RG_SvcRes_UserSid = $del_RG_DL_SvcResUser.SID.Value
 
@@ -1022,8 +1031,7 @@ AL_OU_ORG1_SvcRes_SCCM_URA_GroupMgmt
     -----------------------------#>
     $gtGPO=@()
     $gtGPO = Get-GPO -Name $GPOName
-    if ($gtgpo.id -eq $null)
-    {
+
         $getOUMS = Get-ADOrganizationalUnit -Filter * | where {$_.DistinguishedName -eq $ouSvrResDN} 
         #New GPO based on the service and linked to OU
         New-GPO -Name $GPOName | New-GPLink -Target $getOUMS.DistinguishedName
@@ -1072,11 +1080,6 @@ AL_OU_ORG1_SvcRes_SCCM_URA_GroupMgmt
         #Set GPMC Machine Extensions so Manual Intervention is both displayed in GPO Management and applies to target 
         Set-ADObject -Identity $getGPOPath -Replace @{gPCMachineExtensionNames="[{827D319E-6EAC-11D2-A4EA-00C04F79F83A}{803E14A0-B4FB-11D0-A0D0-00A0C90F574B}]"}
         Set-ADObject -Identity $getGPOPath -Replace @{versionNumber="1"}
-    }
-    else
-    {
-        Write-Host "$GPOName already exists" -ForegroundColor DarkGreen
-    }
 }
 
 Function GPO-ServerOU-URA-ResGps
@@ -1126,8 +1129,6 @@ $ouSrvResServiceDN,$ouSrvResOU
     $gtGPO=@()
     $gtGPO = Get-GPO -Name $GPOName -ErrorAction SilentlyContinue
 
-    if ($gtgpo.id -eq $null)
-    {
         $getOUMS = Get-ADOrganizationalUnit -Filter * | where {$_.DistinguishedName -eq $ouSrvResServiceDN} 
         #New GPO based on the service and linked to OU
         New-GPO -Name $GPOName | New-GPLink -Target $getOUMS.DistinguishedName
@@ -1175,11 +1176,6 @@ $ouSrvResServiceDN,$ouSrvResOU
         #Set GPMC Machine Extensions so Manual Intervention is both displayed in GPO Management and applies to target 
         Set-ADObject -Identity $getGPOPath -Replace @{gPCMachineExtensionNames="[{827D319E-6EAC-11D2-A4EA-00C04F79F83A}{803E14A0-B4FB-11D0-A0D0-00A0C90F574B}]"}
         Set-ADObject -Identity $getGPOPath -Replace @{versionNumber="1"}
-    }
-    else
-    {
-        Write-Host "$GPOName already exists" -ForegroundColor DarkGreen
-    }
 
 }
 
@@ -1295,7 +1291,7 @@ Managed Resources
                     
                     #Function Create Grouos for Managed Resources OU
                     $ManSrvChoice = "Managed"
-                    ADGroup-ManagedServerResources($ManSrvChoice,$ouSvrResDN)  
+                    ADGroup-ManagedServerResources($ManSrvChoice,$ouSvrResDN,$ouOrgName)  
                 }
 <#-----------------------------
 
@@ -1303,7 +1299,7 @@ Service Resources
     Separate Managed Resouces and Service Resources to reduce complexity and dependancy hell
 
 -----------------------------#>
-                #Create Management OU's Managed Resources
+                #Create Management OU's Service Resources
                 foreach ($ouSvrRes in $ouMgmtRtItems[1])
                 {
                     #Function to create managment OU for each Application or Service eg SCCM, SCOM, Exchange
@@ -1314,7 +1310,7 @@ Service Resources
                     $gtouSvrResDN = try {Get-ADOrganizationalUnit $ouSvrResDN -ErrorAction SilentlyContinue} catch {}
                     
                     #Function
-                    CreateOU-SrvRes($ouSvrRes,$ouOrgNameDN,$ouProtect)    
+                    CreateOU-SrvRes($ouSvrRes,$ouOrgNameDN,$ouProtect,$ouOrgName)    
               
                     #select the Service Resources to create sub-OUs
                     $ouSvrResDN = "OU=$($ouSvrRes),$($ouOrgNameDN)"
@@ -1323,7 +1319,7 @@ Service Resources
                     $ManSrvChoice = "Server"
                     
                     #Function - 
-                    ADGroup-ManagedServerResources($ManSrvChoice,$ouSvrResDN) 
+                    ADGroup-ManagedServerResources($ManSrvChoice,$ouSvrResDN,$ouOrgName) 
 
                     $ouCompItem=@()
 
@@ -1338,7 +1334,7 @@ Service Resources
                         $gtouSvrResMgmtDN = try {Get-ADOrganizationalUnit $ouSvrCompDN -ErrorAction SilentlyContinue} catch {}
                         
                         #Function
-                        CreateOU-SrvComp($ouCompItem,$ouSvrResDN,$ouProtect)
+                        CreateOU-SrvComp($ouCompItem,$ouSvrResDN,$ouProtect,$ouOrgName)
 
                         #Create management OUs for each Applications or Service
                         #OU=SCCM,OU=Service Resources,OU=not193,DC=testdom,DC=loc 
@@ -1356,13 +1352,13 @@ Service Resources
                             $gtouSvrResMgmtDN = try {Get-ADOrganizationalUnit $ouSvrResMgmtDN -ErrorAction SilentlyContinue} catch {}
 
                             #Function
-                            CreateOU-SvcSubMgmtOU($ouSrvResOU,$ouSrvResCompDN,$ouProtect,$ouSvrResDN,$ouCompItem)
+                            CreateOU-SvcSubMgmtOU($ouSrvResOU,$ouSrvResCompDN,$ouProtect,$ouSvrResDN,$ouCompItem,$ouOrgName)
 
                             $ouSrvResServiceDN=@()
                             $ouSrvResServiceDN = "OU=$($ouSrvResOU),$($ouSrvResCompDN)"
 
                             #Function create Service Management OUs
-                            ADGroup-ServiceRes-DelegationGrp($ouSrvResServiceDN,$ouSrvResOU,$ouSrvResObj,$ouMgmtResDN,$ouCompItem,$ouSvrRes) 
+                            ADGroup-ServiceRes-DelegationGrp($ouSrvResServiceDN,$ouSrvResOU,$ouSrvResObj,$ouMgmtResDN,$ouCompItem,$ouSvrRes,$ouOrgName) 
                         }
                     }
                 }
