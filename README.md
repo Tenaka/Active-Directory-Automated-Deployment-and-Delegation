@@ -1,6 +1,7 @@
-# AD-Delegation-POC
+# AD-DCPromo_OUDelegation
 
-This is Proof of Concept and unlikely to work as expected......
+This is for rapidly deploying Active Directory and a full OU delegation model based on input from JSON.
+
 
 Overview.
     Deploy multiple Domain Controllers and a new Forest from the JSON file input
@@ -25,4 +26,4 @@ Description.
             Deploys the Domain configutation eg OU and delgation based on:
             https://github.com/Tenaka/AD-Delegation
            
-Current effort is dedicated into CreateOU.ps1 - Likely to be daily changes          
+       
