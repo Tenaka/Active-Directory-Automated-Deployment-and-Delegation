@@ -5,7 +5,8 @@ This is for rapidly deploying Active Directory and a full OU delegation model ba
 Not fully tested and should not be deployed into Live or rerun over the top of a previous deployment.
 
 Overview.
-    Deploy multiple Domain Controllers and a new Forest from the JSON file input
+    Deploy multiple Domain Controllers and a new Forest from the JSON file input.
+    First DC (PDC) will auto-start, logon and then deploy an delegated OU structure.
     
 Description.
     This is script 1 of 4
