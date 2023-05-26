@@ -867,8 +867,10 @@ AL AG_Managed Resources_OU_FullCtrl
     $del_GPO_Edit_Acl = "GPOedit","Edit Group Policy Objects"
     $del_ResGrp_Admin = "ResGrpAdmin","Local Administrative access"
     $del_ResGrp_User = "ResGrpUser","Local User access"
-
     $del_GPO_Modify_ACL = "GPOModify","Edit and Modify GPO"
+    
+    #Role up of permissions for team who manage a service eg SCCM, Exhange, SCOM
+    $del_Role_Service = "GroupMgmt","Manage Group objects"
 
     $del_DL_SrvOUGroup=@()
     $del_DG_SrvOUGroup=@()
@@ -894,6 +896,7 @@ AL AG_Managed Resources_OU_FullCtrl
     if ($ouSrvResOU -eq "Service Accounts"){$ouSrvResOU = "SvcAccts"}
 
     $adTasksDestination = "OU=AD Tasks,$($ouMgmtResDN)" 
+    $adRoleDestination = "OU=AD Roles,$($ouMgmtResDN)" 
 
     if ($ouSrvResObj -eq "Group")
     {
@@ -926,6 +929,17 @@ AL AG_Managed Resources_OU_FullCtrl
     $del_DomainLocal = "AL_"
     $del_DomainGlobal = "AG_"
 
+    #Role up for Service
+    $del_DL_SvcRoleGroup = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_AdminRole"
+    $del_DG_SvcRoleGroup = "$($del_DomainGlobal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_AdminRole"
+
+    $del_GP_Role_Description = "Members of this group have delegated permissions to manage $($ouCompItem)"
+
+    try{New-ADGroup $del_DL_SvcRoleGroup –groupscope DomainLocal -Path $adRoleDestination -Description $del_GP_Role_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+    try{New-ADGroup $del_DG_SvcRoleGroup –groupscope Global -Path $adRoleDestination -Description $del_GP_Role_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+    
+    Add-ADGroupMember $del_DL_SvcRoleGroup $del_DG_SvcRoleGroup
+
     #OU Delegation Group
     $del_DL_SrvOUGroup = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($groupSub.split(",")[0])"
     $del_DG_SrvOUGroup = "$($del_DomainGlobal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($groupSub.split(",")[0])"
@@ -934,7 +948,9 @@ AL AG_Managed Resources_OU_FullCtrl
     try{New-ADGroup $del_DG_SrvOUGroup –groupscope Global -Path $adTasksDestination -Description $del_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
     
     Add-ADGroupMember $del_DL_SrvOUGroup $del_DG_SrvOUGroup
-
+    Add-ADGroupMember $del_DL_SvcRoleGroup $del_DL_SrvOUGroup
+  
+    #Create Delegation Groups
     $GroupName = $del_DL_SrvOUGroup 
     $delOU_FullOU = $ouSrvResServiceDN
 
@@ -973,15 +989,18 @@ AL AG_Managed Resources_OU_FullCtrl
         try{New-ADGroup $del_DL_RGGroupNameAdmin –groupscope Global -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
         try{New-ADGroup $del_DG_RGGroupNameAdmin –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
         Add-ADGroupMember $del_DL_RGGroupNameAdmin $del_DG_RGGroupNameAdmin
+        Add-ADGroupMember $del_DL_SvcRoleGroup $del_DL_RGGroupNameAdmin
 
         try{New-ADGroup $del_DL_RGGroupNameUser –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
         try{New-ADGroup $del_DG_RGGroupNameUser –groupscope Global -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
         Add-ADGroupMember $del_DL_RGGroupNameUser $del_DG_RGGroupNameUser
+        #Add-ADGroupMember $del_DL_SvcRoleGroup $del_DL_RGGroupNameUser
                 
         #GPO Modify
         try{New-ADGroup $del_DL_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
         try{New-ADGroup $del_DG_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
         Add-ADGroupMember $del_DL_GPOGroupModify $del_DG_GPOGroupModify
+        Add-ADGroupMember $del_DL_SvcRoleGroup $del_DL_GPOGroupModify
 
         $gpoName = "GPO_$($ouOrgName)_$($ouSvrRes)_$($ouCompItem)_$($ouSrvResOU)_Custom"
 
