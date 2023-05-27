@@ -1,7 +1,7 @@
 {
     "FirstDC":
         {
-        "PDCName":"WIN-VUS9M7QLHPN",
+        "PDCName":"DC01",
         "PDCRole":"true",
         "IPAddress":"10.0.0.1",
         "Subnet":"255.255.255.0",
