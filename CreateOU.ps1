@@ -24,6 +24,7 @@ Version.
 230522.1 - Inherited and service specific Restricted Groups and URA added to GPO for Servers
 230523.1 - Created Function to out to display
 230523.2 - Added Tries and if exists
+230528.1 - Fixed issues with Service Level Ou targeting
 
 -----------------------------#>
 
@@ -683,7 +684,7 @@ FUNCTIONS - Create Security Groups and link to OUs and GPOs
 
 -----------------------------#>
 
-function ADGroup-ManagedServerResources 
+function ADGroup-ManagedResources 
 {
 <#-----------------------------
 
@@ -692,7 +693,7 @@ AL AG_Managed Resources_OU_FullCtrl
 
 -----------------------------#>   
     #Function to write out to screen
-    [string]$funcName = "ADGroup-ManagedServerResources"
+    [string]$funcName = "ADGroup-ManagedResources"
     $funcDescription = "Function to create AD Groups for Restricted Groups and URA for Management\Service Resources OU"
     $funcComment = "No Comment"
     Funcwriteout($funcname,$funcDescription,$funcComment)
@@ -742,106 +743,158 @@ AL AG_Managed Resources_OU_FullCtrl
 
     foreach ($del_grp in $del_Group)
         {
-        
-        if ($ManSrvChoice -match "Managed")
-            {
-                $adTasksDestination = "OU=AD Tasks,$($ouMgmtResDN)"
+            $adTasksDestination = "OU=AD Tasks,$($ouMgmtResDN)"
 
-                #OU Delegation Group
-                $del_OUGroupName = "$($del_grp)OU_$($ouOrgName)_$($mgmtResTruc)_$($del_OU_Full_Acl.split(",")[0])"
-            }
-        elseif ($ManSrvChoice -match "Server")
-            {
-                $adTasksDestination = "OU=AD Tasks,$($ouMgmtResDN)" 
+            #OU Delegation Group
+            $del_OUGroupName = "$($del_grp)OU_$($ouOrgName)_$($mgmtResTruc)_$($del_OU_Full_Acl.split(",")[0])"
+       
+            #Create new AD Groups
+            if ($del_OUGroupName -like "$del_DomainGlobal*")
+                {
+                    #OU Delegation Group
+                    try{New-ADGroup $del_OUGroupName –groupscope Global -Path $adTasksDestination -Description $del_OU_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
 
-                #OU Delegation Group
-                $del_OUGroupName = "$($del_grp)OU_$($ouOrgName)_$($SvcResTrun)_$($del_OU_Full_Acl.split(",")[0])"
+                    #Add to array for group nesting
+                    $new_OUGroupName+="$($del_OUGroupName)"
+ 
+                }
+            elseif ($del_OUGroupName -like "$del_DomainLocal*")
+                {
+                    #OU Delegation Group
+                    try{New-ADGroup $del_OUGroupName –groupscope DomainLocal -Path $adTasksDestination -Description $del_OU_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}  
 
-                #Restriced Group 
-                $del_RGGroupNameAdmin = "$($del_grp)RG_$($ouOrgName)_$($SvcResTrun)_$($del_ResGrp_Admin.split(",")[0])"
-                $del_RGGroupNameUser = "$($del_grp)RG_$($ouOrgName)_$($SvcResTrun)_$($del_ResGrp_User.split(",")[0])"
+                    $delOU_FullOU = $ouMgmtResDN
+                    $groupName = $del_OUGroupName
 
-                #GPO Modify
-                $del_GPOGroupModify = "$($del_grp)GPO_$($ouOrgName)_$($SvcResTrun)_$($del_GPO_Modify_ACL.split(",")[0])"
-            }
-        
-        #Create new AD Groups
-        if ($del_OUGroupName -like "$del_DomainGlobal*")
-            {
-                #OU Delegation Group
-                try{New-ADGroup $del_OUGroupName –groupscope Global -Path $adTasksDestination -Description $del_OU_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
-                
-                #Restriced Group 
-                try{New-ADGroup $del_RGGroupNameAdmin –groupscope Global -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
-                try{New-ADGroup $del_RGGroupNameUser –groupscope Global -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen} 
-                
-                #GPO Modify
-                try{New-ADGroup $del_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+                    #Function to delegate OU Full Control to a named group
+                    Delegate_FullControl($delOU_FullOU,$GroupName)  
 
-                #Add to array for group nesting
-                $new_OUGroupName+="$($del_OUGroupName)"
-                $new_RGAdminGroupName+="$($del_RGGroupNameAdmin)"
-                $new_RGAUserGroupName+="$($del_RGGroupNameUser)" 
-                $new_GPOModGroupName+="$($del_GPOGroupModify)"    
-            }
-        elseif ($del_OUGroupName -like "$del_DomainLocal*")
-            {
-                #OU Delegation Group
-                try{New-ADGroup $del_OUGroupName –groupscope DomainLocal -Path $adTasksDestination -Description $del_OU_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}  
-                
-                #Restriced Group 
-                try{New-ADGroup $del_RGGroupNameAdmin –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
-                try{New-ADGroup $del_RGGroupNameUser –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
-
-                #GPO Modify
-                try{New-ADGroup $del_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
-
-                #$delOU_FullOU=@()
-                #$groupName=@()
-                
-                if ($del_OUGroupName -match "SvcRes"){$delOU_FullOU = $ouSvrResDN}
-                elseif ($del_OUGroupName -match "MgmtRes"){$delOU_FullOU = $ouMgmtResDN}
-                $groupName = $del_OUGroupName
-
-                #Function to delegate OU Full Control to a named group
-                Delegate_FullControl($delOU_FullOU,$GroupName)  
-                              
-                #Get New Group Name and SID
-                $gt_del_RG_SvcRes_AdminSid=@()
-                $del_RG_DL_SvcResUser=@()
-                $gpoName = "GPO_$($ouOrgName)_$($ouSvrRes)_Custom"
-                $del_RG_DL_SvcResAdmin = Get-ADGroup $del_RGGroupNameAdmin
-                $del_RG_DL_SvcResUser = Get-ADGroup $del_RGGroupNameUser
-
-                write-host $del_RGGroupNameAdmin -ForegroundColor Red
-                write-host $del_RGGroupNameAdmin -ForegroundColor Red
-             
-                GPO-ServiceResource-URA-ResGps($gpoName,$del_RG_DL_SvcResAdmin,$del_RG_DL_SvcResUser,$ouOrgName,$del_GPOGroupModify)
-                
-                #Add to array for group nesting
-                $new_OUGroupName+="$($del_OUGroupName)"
-                $new_RGAdminGroupName+="$($del_RGGroupNameAdmin)"
-                $new_RGAUserGroupName+="$($del_RGGroupNameUser)" 
-                $new_GPOModGroupName+="$($del_GPOGroupModify)"          
-            }                  
+                    #Add to array for group nesting
+                    $new_OUGroupName+="$($del_OUGroupName)"
+                    $new_GPOModGroupName+="$($del_GPOGroupModify)"          
+                }                  
     }
 
     #Nested groups
     try
         {                
             Add-ADGroupMember $new_OUGroupName[0] $new_OUGroupName[1]
-            Add-ADGroupMember $new_RGAdminGroupName[0] $new_RGAdminGroupName[1]
-            Add-ADGroupMember $new_RGAUserGroupName[0] $new_RGAUserGroupName[1]
-            Add-ADGroupMember $new_GPOModGroupName[0] $new_GPOModGroupName[1]
         }
     catch
         {
             Add-ADGroupMember $new_OUGroupName[1] $new_OUGroupName[0]
-            Add-ADGroupMember $new_RGAdminGroupName[1] $new_RGAdminGroupName[0]
-            Add-ADGroupMember $new_RGAUserGroupName[1] $new_RGAUserGroupName[0]
-            Add-ADGroupMember $new_GPOModGroupName[1] $new_GPOModGroupName[0]
         }
 }
+
+
+function ADGroup-ServiceResources 
+{
+<#-----------------------------
+
+Create nested groups Domain Global into Domain Local and attach Domain Local to the object
+AL AG_Managed Resources_OU_FullCtrl
+
+-----------------------------#>   
+    #Function to write out to screen
+    [string]$funcName = "ADGroup-ServiceResources"
+    $funcDescription = "Function to create AD Groups for Restricted Groups and URA for Management\Service Resources OU"
+    $funcComment = "No Comment"
+    Funcwriteout($funcname,$funcDescription,$funcComment)
+
+    #Group Acl and Description
+    $del_OU_Full_Acl = "FullCtrl","Full Control of all OU objects"
+    $del_OU_Computer_Acl = "CompMgmt","Manage Computer Objects"
+    $del_OU_Group_Acl = "GroupMgmt","Manage Group objects"
+    $del_OU_User_Acl = "UserMgmt","Manage User objects"
+    $del_OU_Service_Acl = "SvcMgmt","Manage Service Accounts"
+    $del_GPO_Edit_Acl = "GPOedit","Edit Group Policy Objects"
+    $del_ResGrp_Admin = "ResGrpAdmin","Local Administrative access"
+    $del_ResGrp_User = "ResGrpUser","Local User access"
+    $del_GPO_Modify_ACL = "GPOModify","Edit and Modify GPO"
+
+    $del_DL_SrvOUGroup=@()
+    $del_DG_SrvOUGroup=@()
+    $del_Description=@()
+    $adTasksDestination=@()
+    $SvcResTrun=@()
+
+    #Group Descriptions
+    $del_OU_Description = "Members of this group have $($del_OU_Full_Acl.split(",")[1])"
+    $del_RG_Admin_Description = "Members of this group have $($del_ResGrp_Admin.split(",")[1])"
+    $del_RG_User_Description = "Members of this group have $($del_ResGrp_User.split(",")[1])"
+    $del_GP_SvcAtts_Description = "Members of this group have $($del_OU_Service_Acl.split(",")[1])"
+    $del_GP_Compu_Description = "Members of this group have $($del_OU_Computer_Acl.split(",")[1])"
+    $del_GP_Group_Description = "Members of this group have $($del_OU_Group_Acl.split(",")[1])"
+    $del_GP_User_Description = "Members of this group have $($del_OU_User_Acl.split(",")[1])"
+    $del_GPO_GPOEdit_Description = "Members of this group have $($del_GPO_Edit_Acl.split(",")[1])"
+    $del_GPO_Modify_Description = "Members of this group have $($del_GPO_Modify_ACL.split(",")[1])"
+
+    #Truncate Service Resouce - to limit character limit for groups
+    $SvcResTrun = "SvcRes"
+
+    $adTasksDestination = "OU=AD Tasks,$($ouMgmtResDN)" 
+
+    #Local and Global
+    $del_DomainLocal = "AL_"
+    $del_DomainGlobal = "AG_"
+    $del_Group = $del_DomainLocal,$del_DomainGlobal
+
+    $SvcResTrun = "SvcRes"
+    $mgmtResTruc = "MgmtRes"
+
+    #OU Delegation Group
+    $del_DL_OUGroupName = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($del_OU_Full_Acl.split(",")[0])"
+    $del_DG_OUGroupName = "$($del_DomainGlobal)OU_$($ouOrgName)_$($SvcResTrun)_$($del_OU_Full_Acl.split(",")[0])"
+
+    #Restriced Group 
+    $del_DL_RGGroupNameAdmin = "$($del_DomainLocal)RG_$($ouOrgName)_$($SvcResTrun)_$($del_ResGrp_Admin.split(",")[0])"
+    $del_DG_RGGroupNameAdmin = "$($del_DomainGlobal)RG_$($ouOrgName)_$($SvcResTrun)_$($del_ResGrp_Admin.split(",")[0])"
+
+
+    $del_DL_RGGroupNameUser = "$($del_DomainLocal)RG_$($ouOrgName)_$($SvcResTrun)_$($del_ResGrp_User.split(",")[0])"
+    $del_DG_RGGroupNameUser = "$($del_DomainGlobal)RG_$($ouOrgName)_$($SvcResTrun)_$($del_ResGrp_User.split(",")[0])"
+
+    #GPO Modify
+    $del_DL_GPOGroupModify = "$($del_DomainLocal)GPO_$($ouOrgName)_$($SvcResTrun)_$($del_GPO_Modify_ACL.split(",")[0])"
+    $del_DG_GPOGroupModify = "$($del_DomainGlobal)GPO_$($ouOrgName)_$($SvcResTrun)_$($del_GPO_Modify_ACL.split(",")[0])"
+
+    #OU Delegation Group
+    try{New-ADGroup $del_DL_OUGroupName –groupscope Global -Path $adTasksDestination -Description $del_OU_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+    try{New-ADGroup $del_DG_OUGroupName –groupscope DomainLocal -Path $adTasksDestination -Description $del_OU_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}  
+    Add-ADGroupMember $del_DL_OUGroupName $del_DG_OUGroupName
+
+    #Restriced Group 
+    try{New-ADGroup $del_DL_RGGroupNameAdmin –groupscope Global -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+    try{New-ADGroup $del_DG_RGGroupNameAdmin –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+    Add-ADGroupMember $del_DL_RGGroupNameAdmin $del_DG_RGGroupNameAdmin 
+                
+    try{New-ADGroup $del_DL_RGGroupNameUser –groupscope Global -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen} 
+    try{New-ADGroup $del_DG_RGGroupNameUser –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+    Add-ADGroupMember $del_DL_RGGroupNameUser $del_DG_RGGroupNameUser          
+                
+    #GPO Modify
+    try{New-ADGroup $del_DL_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+    try{New-ADGroup $del_DG_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+    Add-ADGroupMember $del_DL_GPOGroupModify $del_DG_GPOGroupModify
+        
+    $delOU_FullOU = $ouSvrResDN
+    $groupName = $del_DL_OUGroupName
+    $del_GPOGroupModify = $del_DL_GPOGroupModify
+
+    #Function to delegate OU Full Control to a named group
+    Delegate_FullControl($delOU_FullOU,$GroupName)  
+                              
+    #Get New Group Name and SID
+    $gt_del_RG_SvcRes_AdminSid=@()
+    $del_RG_DL_SvcResUser=@()
+    $gpoName = "GPO_$($ouOrgName)_$($ouSvrRes)_Custom"
+    $del_RG_DL_SvcResAdmin = Get-ADGroup $del_DL_RGGroupNameAdmin
+    $del_RG_DL_SvcResUser = Get-ADGroup $del_DL_RGGroupNameUser
+             
+    GPO-ServiceResource-URA-ResGps($gpoName,$del_RG_DL_SvcResAdmin,$del_RG_DL_SvcResUser,$ouOrgName,$del_GPOGroupModify)
+                           
+}
+
 
 function ADGroup-ServiceRes-DelegationGrp 
 {
@@ -1010,6 +1063,9 @@ AL AG_Managed Resources_OU_FullCtrl
         GPO-ServerOU-URA-ResGps($gpoName,$ouSrvResServiceDN,$ouSrvResOU,$del_RG_DL_ServerAdmin, $del_RG_DL_ServerUser,$del_DL_GPOGroupModify)        
     }
 }
+
+
+
 
 <#-----------------------------
 
@@ -1310,7 +1366,7 @@ Managed Resources
                     
                     #Function Create Grouos for Managed Resources OU
                     $ManSrvChoice = "Managed"
-                    ADGroup-ManagedServerResources($ManSrvChoice,$ouSvrResDN,$ouOrgName)  
+                    ADGroup-ManagedResources($ManSrvChoice,$ouSvrResDN,$ouOrgName)  
                 }
 <#-----------------------------
 
@@ -1338,7 +1394,7 @@ Service Resources
                     $ManSrvChoice = "Server"
                     
                     #Function - 
-                    ADGroup-ManagedServerResources($ManSrvChoice,$ouSvrResDN,$ouOrgName) 
+                    ADGroup-ServiceResources($ManSrvChoice,$ouSvrResDN,$ouOrgName) 
 
                     $ouCompItem=@()
 
