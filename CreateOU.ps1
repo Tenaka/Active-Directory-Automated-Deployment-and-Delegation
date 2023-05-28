@@ -129,8 +129,6 @@ Write-Host "-----------------------------#>" -ForegroundColor Green
 Write-Host " "
 }
 
-
-
 <#-----------------------------
 
 Disable Scheduled Task and Autologon
@@ -786,7 +784,6 @@ AL AG_Managed Resources_OU_FullCtrl
         }
 }
 
-
 function ADGroup-ServiceResources 
 {
 <#-----------------------------
@@ -894,7 +891,6 @@ AL AG_Managed Resources_OU_FullCtrl
     GPO-ServiceResource-URA-ResGps($gpoName,$del_RG_DL_SvcResAdmin,$del_RG_DL_SvcResUser,$ouOrgName,$del_GPOGroupModify)
                            
 }
-
 
 function ADGroup-ServiceRes-DelegationGrp 
 {
@@ -1063,9 +1059,6 @@ AL AG_Managed Resources_OU_FullCtrl
         GPO-ServerOU-URA-ResGps($gpoName,$ouSrvResServiceDN,$ouSrvResOU,$del_RG_DL_ServerAdmin, $del_RG_DL_ServerUser,$del_DL_GPOGroupModify)        
     }
 }
-
-
-
 
 <#-----------------------------
 
