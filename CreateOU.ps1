@@ -858,13 +858,13 @@ AL AG_Managed Resources_OU_FullCtrl
     $del_DG_GPOGroupModify = "$($del_DomainGlobal)GPO_$($ouOrgName)_$($SvcResTrun)_$($del_GPO_Modify_ACL.split(",")[0])"
 
     #OU Delegation Group
-    try{New-ADGroup $del_DL_OUGroupName –groupscope Global -Path $adTasksDestination -Description $del_OU_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
-    try{New-ADGroup $del_DG_OUGroupName –groupscope DomainLocal -Path $adTasksDestination -Description $del_OU_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}  
+    try{New-ADGroup $del_DL_OUGroupName –groupscope DomainLocal -Path $adTasksDestination -Description $del_OU_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+    try{New-ADGroup $del_DG_OUGroupName –groupscope Global -Path $adTasksDestination -Description $del_OU_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}  
     Add-ADGroupMember $del_DL_OUGroupName $del_DG_OUGroupName
 
     #Restriced Group 
-    try{New-ADGroup $del_DL_RGGroupNameAdmin –groupscope Global -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
-    try{New-ADGroup $del_DG_RGGroupNameAdmin –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+    try{New-ADGroup $del_DL_RGGroupNameAdmin –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+    try{New-ADGroup $del_DG_RGGroupNameAdmin –groupscope Global -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
     Add-ADGroupMember $del_DL_RGGroupNameAdmin $del_DG_RGGroupNameAdmin 
                 
     try{New-ADGroup $del_DL_RGGroupNameUser –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen} 
