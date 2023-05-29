@@ -24,7 +24,6 @@ Version.
 230522.1 - Inherited and service specific Restricted Groups and URA added to GPO for Servers
 230523.1 - Created Function to out to display
 230523.2 - Added Tries and if exists
-230528.1 - Fixed issues with Service Level Ou targeting
 
 -----------------------------#>
 
@@ -128,6 +127,8 @@ Write-Host "-----------------------------#>" -ForegroundColor Green
 Write-Host "-----------------------------#>" -ForegroundColor Green
 Write-Host " "
 }
+
+
 
 <#-----------------------------
 
@@ -784,6 +785,7 @@ AL AG_Managed Resources_OU_FullCtrl
         }
 }
 
+
 function ADGroup-ServiceResources 
 {
 <#-----------------------------
@@ -865,12 +867,12 @@ AL AG_Managed Resources_OU_FullCtrl
     try{New-ADGroup $del_DG_RGGroupNameAdmin –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
     Add-ADGroupMember $del_DL_RGGroupNameAdmin $del_DG_RGGroupNameAdmin 
                 
-    try{New-ADGroup $del_DL_RGGroupNameUser –groupscope Global -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen} 
-    try{New-ADGroup $del_DG_RGGroupNameUser –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+    try{New-ADGroup $del_DL_RGGroupNameUser –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen} 
+    try{New-ADGroup $del_DG_RGGroupNameUser –groupscope Global -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
     Add-ADGroupMember $del_DL_RGGroupNameUser $del_DG_RGGroupNameUser          
                 
     #GPO Modify
-    try{New-ADGroup $del_DL_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+    try{New-ADGroup $del_DL_GPOGroupModify –groupscope DomainLocal -Path $adTasksDestination -Description $del_GPO_Modify_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
     try{New-ADGroup $del_DG_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
     Add-ADGroupMember $del_DL_GPOGroupModify $del_DG_GPOGroupModify
         
@@ -891,6 +893,7 @@ AL AG_Managed Resources_OU_FullCtrl
     GPO-ServiceResource-URA-ResGps($gpoName,$del_RG_DL_SvcResAdmin,$del_RG_DL_SvcResUser,$ouOrgName,$del_GPOGroupModify)
                            
 }
+
 
 function ADGroup-ServiceRes-DelegationGrp 
 {
@@ -997,7 +1000,7 @@ AL AG_Managed Resources_OU_FullCtrl
     try{New-ADGroup $del_DG_SrvOUGroup –groupscope Global -Path $adTasksDestination -Description $del_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
     
     Add-ADGroupMember $del_DL_SrvOUGroup $del_DG_SrvOUGroup
-    Add-ADGroupMember $del_DL_SvcRoleGroup $del_DL_SrvOUGroup
+    Add-ADGroupMember $del_DL_SvcRoleGroup $del_DG_SrvOUGroup
   
     #Create Delegation Groups
     $GroupName = $del_DL_SrvOUGroup 
@@ -1035,8 +1038,8 @@ AL AG_Managed Resources_OU_FullCtrl
         $del_DG_GPOGroupModify = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_GPO_Modify_ACL.split(",")[0])"
    
         #Restriced Group 
-        try{New-ADGroup $del_DL_RGGroupNameAdmin –groupscope Global -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
-        try{New-ADGroup $del_DG_RGGroupNameAdmin –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+        try{New-ADGroup $del_DL_RGGroupNameAdmin –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+        try{New-ADGroup $del_DG_RGGroupNameAdmin –groupscope Global -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
         Add-ADGroupMember $del_DL_RGGroupNameAdmin $del_DG_RGGroupNameAdmin
         Add-ADGroupMember $del_DL_SvcRoleGroup $del_DL_RGGroupNameAdmin
 
@@ -1046,10 +1049,10 @@ AL AG_Managed Resources_OU_FullCtrl
         #Add-ADGroupMember $del_DL_SvcRoleGroup $del_DL_RGGroupNameUser
                 
         #GPO Modify
-        try{New-ADGroup $del_DL_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+        try{New-ADGroup $del_DL_GPOGroupModify –groupscope DomainLocal -Path $adTasksDestination -Description $del_GPO_Modify_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
         try{New-ADGroup $del_DG_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
         Add-ADGroupMember $del_DL_GPOGroupModify $del_DG_GPOGroupModify
-        Add-ADGroupMember $del_DL_SvcRoleGroup $del_DL_GPOGroupModify
+        Add-ADGroupMember $del_DL_SvcRoleGroup $del_DG_GPOGroupModify
 
         $gpoName = "GPO_$($ouOrgName)_$($ouSvrRes)_$($ouCompItem)_$($ouSrvResOU)_Custom"
 
@@ -1059,6 +1062,9 @@ AL AG_Managed Resources_OU_FullCtrl
         GPO-ServerOU-URA-ResGps($gpoName,$ouSrvResServiceDN,$ouSrvResOU,$del_RG_DL_ServerAdmin, $del_RG_DL_ServerUser,$del_DL_GPOGroupModify)        
     }
 }
+
+
+
 
 <#-----------------------------
 
