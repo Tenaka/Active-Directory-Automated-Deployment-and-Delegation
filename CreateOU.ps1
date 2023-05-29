@@ -24,6 +24,7 @@ Version.
 230522.1 - Inherited and service specific Restricted Groups and URA added to GPO for Servers
 230523.1 - Created Function to out to display
 230523.2 - Added Tries and if exists
+230529.1 - Fixed issues with Global and DomainLocal groups mixing up.
 
 -----------------------------#>
 
@@ -1028,20 +1029,20 @@ AL AG_Managed Resources_OU_FullCtrl
 
         #Restriced Group 
         $del_DL_RGGroupNameAdmin = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_ResGrp_Admin.split(",")[0])"
-        $del_DG_RGGroupNameAdmin = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_ResGrp_Admin.split(",")[0])"
+        $del_DG_RGGroupNameAdmin = "$($del_DomainGlobal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_ResGrp_Admin.split(",")[0])"
 
         $del_DL_RGGroupNameUser = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_ResGrp_User.split(",")[0])"
-        $del_DG_RGGroupNameUser = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_ResGrp_User.split(",")[0])"
+        $del_DG_RGGroupNameUser = "$($del_DomainGlobal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_ResGrp_User.split(",")[0])"
 
         #GPO Modify
         $del_DL_GPOGroupModify = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_GPO_Modify_ACL.split(",")[0])"
-        $del_DG_GPOGroupModify = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_GPO_Modify_ACL.split(",")[0])"
+        $del_DG_GPOGroupModify = "$($del_DomainGlobal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_GPO_Modify_ACL.split(",")[0])"
    
         #Restriced Group 
         try{New-ADGroup $del_DL_RGGroupNameAdmin –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
         try{New-ADGroup $del_DG_RGGroupNameAdmin –groupscope Global -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
         Add-ADGroupMember $del_DL_RGGroupNameAdmin $del_DG_RGGroupNameAdmin
-        Add-ADGroupMember $del_DL_SvcRoleGroup $del_DL_RGGroupNameAdmin
+        Add-ADGroupMember $del_DL_SvcRoleGroup $del_DG_RGGroupNameAdmin
 
         try{New-ADGroup $del_DL_RGGroupNameUser –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
         try{New-ADGroup $del_DG_RGGroupNameUser –groupscope Global -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
