@@ -62,7 +62,6 @@
                 [
                     "AD Roles,Group",
                     "AD Tasks,Group",
-                    "URA,Group",
                     "Admin Accounts,User"
                 ],
             "Computers":"Certificates,MOSS,DevOps,SQL,Oracle,SCCM,SCOM,File Server,Exchange",
@@ -85,7 +84,6 @@
                 [
                     "AD Roles,Group",
                     "AD Tasks,Group",
-                    "URA,Group",
                     "Admin Accounts,User"
                 ],
             "Computers":"Clients",
