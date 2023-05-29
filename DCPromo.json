@@ -53,7 +53,7 @@
        {
         "Organisation1":
             {
-            "Name":"Org1",
+            "Name":"Member Servers",
             "Path":"Root",
             "Type":"Server",
             "Protect":"false",
@@ -65,7 +65,7 @@
                     "URA,Group",
                     "Admin Accounts,User"
                 ],
-            "Computers":"Certificates,MOSS,DevOps,SQL,Oracle",
+            "Computers":"Certificates,MOSS,DevOps,SQL,Oracle,SCCM,SCOM,File Server,Exchange",
             "ServersResources":
                 [
                     "Servers,Computer",
@@ -74,32 +74,9 @@
                     "URA,Group"
                 ]
             },
-            "Organisation2":
+        "Organisation2":
             {
-            "Name":"Org2",
-            "Path":"Root",
-            "Type":"Server",
-            "Protect":"false",
-            "ManagementOU":"Managed Resources,Service Resources",
-            "ManagedResources":
-                [
-                    "AD Roles,Group",
-                    "AD Tasks,Group",
-                    "URA,Group",
-                    "Admin Accounts,User"
-                ],
-            "Computers":"SCCM,SCOM,File Server,Exchange",
-            "ServersResources":
-                [
-                    "Servers,Computer",
-                    "Application Groups,Group",
-                    "Service Accounts,SvcAccts",
-                    "URA,Group"
-                ]
-            },
-            "Clients":
-            {
-            "Name":"Org3",
+            "Name":"User Services",
             "Path":"Root",
             "Type":"Clients",
             "Protect":"false",
