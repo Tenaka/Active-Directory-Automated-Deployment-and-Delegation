@@ -1023,9 +1023,8 @@ AL AG_Managed Resources_OU_FullCtrl
     elseif ($ouSrvResObj -eq "computer")
     {
         Delegate_Computer($GroupName,$delOU_FullOU)   
+    }
 
-        Delegation_SvcAccts($GroupName,$delOU_FullOU)  
-        #pause
 
         #Restriced Group 
         $del_DL_RGGroupNameAdmin = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_ResGrp_Admin.split(",")[0])"
@@ -1061,7 +1060,6 @@ AL AG_Managed Resources_OU_FullCtrl
         $del_RG_DL_ServerUser = Get-ADGroup $del_DL_RGGroupNameUser
 
         GPO-ServerOU-URA-ResGps($gpoName,$ouSrvResServiceDN,$ouSrvResOU,$del_RG_DL_ServerAdmin, $del_RG_DL_ServerUser,$del_DL_GPOGroupModify)        
-    }
 }
 
 
