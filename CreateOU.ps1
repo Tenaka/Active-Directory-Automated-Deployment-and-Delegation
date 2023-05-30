@@ -981,10 +981,12 @@ AL AG_Managed Resources_OU_FullCtrl
     #Local and Global
     $del_DomainLocal = "AL_"
     $del_DomainGlobal = "AG_"
+    $del_DomainLocalRole = "RL_"
+    $del_DomainGlobalRole = "RG_"
 
     #Role up for Service
-    $del_DL_SvcRoleGroup = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_AdminRole"
-    $del_DG_SvcRoleGroup = "$($del_DomainGlobal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_AdminRole"
+    $del_DL_SvcRoleGroup = "$($del_DomainLocalRole)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_AdminRole"
+    $del_DG_SvcRoleGroup = "$($del_DomainGlobalRole)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_AdminRole"
 
     $del_GP_Role_Description = "Members of this group have delegated permissions to manage $($ouCompItem)"
 
@@ -1016,15 +1018,14 @@ AL AG_Managed Resources_OU_FullCtrl
     {
         Delegate_User($GroupName,$delOU_FullOU)   
     }
-        elseif ($ouSrvResObj -eq "SvcAccts")
+    elseif ($ouSrvResObj -eq "SvcAccts")
     {
         Delegate_User($GroupName,$delOU_FullOU)   
     }
     elseif ($ouSrvResObj -eq "computer")
     {
         Delegate_Computer($GroupName,$delOU_FullOU)   
-    }
-
+    
 
         #Restriced Group 
         $del_DL_RGGroupNameAdmin = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_ResGrp_Admin.split(",")[0])"
@@ -1059,7 +1060,9 @@ AL AG_Managed Resources_OU_FullCtrl
         $del_RG_DL_ServerAdmin = Get-ADGroup $del_DL_RGGroupNameAdmin
         $del_RG_DL_ServerUser = Get-ADGroup $del_DL_RGGroupNameUser
 
-        GPO-ServerOU-URA-ResGps($gpoName,$ouSrvResServiceDN,$ouSrvResOU,$del_RG_DL_ServerAdmin, $del_RG_DL_ServerUser,$del_DL_GPOGroupModify)        
+        GPO-ServerOU-URA-ResGps($gpoName,$ouSrvResServiceDN,$ouSrvResOU,$del_RG_DL_ServerAdmin, $del_RG_DL_ServerUser,$del_DL_GPOGroupModify) 
+        
+    }       
 }
 
 
