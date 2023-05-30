@@ -1028,15 +1028,15 @@ AL AG_Managed Resources_OU_FullCtrl
     
 
         #Restriced Group 
-        $del_DL_RGGroupNameAdmin = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_ResGrp_Admin.split(",")[0])"
-        $del_DG_RGGroupNameAdmin = "$($del_DomainGlobal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_ResGrp_Admin.split(",")[0])"
+        $del_DL_RGGroupNameAdmin = "$($del_DomainLocal)RG_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_ResGrp_Admin.split(",")[0])"
+        $del_DG_RGGroupNameAdmin = "$($del_DomainGlobal)RG_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_ResGrp_Admin.split(",")[0])"
 
-        $del_DL_RGGroupNameUser = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_ResGrp_User.split(",")[0])"
-        $del_DG_RGGroupNameUser = "$($del_DomainGlobal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_ResGrp_User.split(",")[0])"
+        $del_DL_RGGroupNameUser = "$($del_DomainLocal)RG_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_ResGrp_User.split(",")[0])"
+        $del_DG_RGGroupNameUser = "$($del_DomainGlobal)RG_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_ResGrp_User.split(",")[0])"
 
         #GPO Modify
-        $del_DL_GPOGroupModify = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_GPO_Modify_ACL.split(",")[0])"
-        $del_DG_GPOGroupModify = "$($del_DomainGlobal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_GPO_Modify_ACL.split(",")[0])"
+        $del_DL_GPOGroupModify = "$($del_DomainLocal)GPO_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_GPO_Modify_ACL.split(",")[0])"
+        $del_DG_GPOGroupModify = "$($del_DomainGlobal)GPO_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_GPO_Modify_ACL.split(",")[0])"
    
         #Restriced Group 
         try{New-ADGroup $del_DL_RGGroupNameAdmin –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
