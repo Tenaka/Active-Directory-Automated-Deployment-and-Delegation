@@ -752,7 +752,7 @@ AL AG_Managed Resources_OU_FullCtrl
             if ($del_OUGroupName -like "$del_DomainGlobal*")
                 {
                     #OU Delegation Group
-                    try{New-ADGroup $del_OUGroupName –groupscope Global -Path $adTasksDestination -Description $del_OU_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+                    try{New-ADGroup $del_OUGroupName -groupscope Global -Path $adTasksDestination -Description $del_OU_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
 
                     #Add to array for group nesting
                     $new_OUGroupName+="$($del_OUGroupName)"
@@ -761,7 +761,7 @@ AL AG_Managed Resources_OU_FullCtrl
             elseif ($del_OUGroupName -like "$del_DomainLocal*")
                 {
                     #OU Delegation Group
-                    try{New-ADGroup $del_OUGroupName –groupscope DomainLocal -Path $adTasksDestination -Description $del_OU_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}  
+                    try{New-ADGroup $del_OUGroupName -groupscope DomainLocal -Path $adTasksDestination -Description $del_OU_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}  
 
                     $delOU_FullOU = $ouMgmtResDN
                     $groupName = $del_OUGroupName
@@ -859,22 +859,22 @@ AL AG_Managed Resources_OU_FullCtrl
     $del_DG_GPOGroupModify = "$($del_DomainGlobal)GPO_$($ouOrgName)_$($SvcResTrun)_$($del_GPO_Modify_ACL.split(",")[0])"
 
     #OU Delegation Group
-    try{New-ADGroup $del_DL_OUGroupName –groupscope DomainLocal -Path $adTasksDestination -Description $del_OU_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
-    try{New-ADGroup $del_DG_OUGroupName –groupscope Global -Path $adTasksDestination -Description $del_OU_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}  
+    try{New-ADGroup $del_DL_OUGroupName -groupscope DomainLocal -Path $adTasksDestination -Description $del_OU_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+    try{New-ADGroup $del_DG_OUGroupName -groupscope Global -Path $adTasksDestination -Description $del_OU_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}  
     Add-ADGroupMember $del_DL_OUGroupName $del_DG_OUGroupName
 
     #Restriced Group 
-    try{New-ADGroup $del_DL_RGGroupNameAdmin –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
-    try{New-ADGroup $del_DG_RGGroupNameAdmin –groupscope Global -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+    try{New-ADGroup $del_DL_RGGroupNameAdmin -groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+    try{New-ADGroup $del_DG_RGGroupNameAdmin -groupscope Global -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
     Add-ADGroupMember $del_DL_RGGroupNameAdmin $del_DG_RGGroupNameAdmin 
                 
-    try{New-ADGroup $del_DL_RGGroupNameUser –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen} 
-    try{New-ADGroup $del_DG_RGGroupNameUser –groupscope Global -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+    try{New-ADGroup $del_DL_RGGroupNameUser -groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen} 
+    try{New-ADGroup $del_DG_RGGroupNameUser -groupscope Global -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
     Add-ADGroupMember $del_DL_RGGroupNameUser $del_DG_RGGroupNameUser          
                 
     #GPO Modify
-    try{New-ADGroup $del_DL_GPOGroupModify –groupscope DomainLocal -Path $adTasksDestination -Description $del_GPO_Modify_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
-    try{New-ADGroup $del_DG_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+    try{New-ADGroup $del_DL_GPOGroupModify -groupscope DomainLocal -Path $adTasksDestination -Description $del_GPO_Modify_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+    try{New-ADGroup $del_DG_GPOGroupModify -groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
     Add-ADGroupMember $del_DL_GPOGroupModify $del_DG_GPOGroupModify
         
     $delOU_FullOU = $ouSvrResDN
@@ -990,8 +990,8 @@ AL AG_Managed Resources_OU_FullCtrl
 
     $del_GP_Role_Description = "Members of this group have delegated permissions to manage $($ouCompItem)"
 
-    try{New-ADGroup $del_DL_SvcRoleGroup –groupscope DomainLocal -Path $adRoleDestination -Description $del_GP_Role_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
-    try{New-ADGroup $del_DG_SvcRoleGroup –groupscope Global -Path $adRoleDestination -Description $del_GP_Role_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+    try{New-ADGroup $del_DL_SvcRoleGroup -groupscope DomainLocal -Path $adRoleDestination -Description $del_GP_Role_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+    try{New-ADGroup $del_DG_SvcRoleGroup -groupscope Global -Path $adRoleDestination -Description $del_GP_Role_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
     
     Add-ADGroupMember $del_DL_SvcRoleGroup $del_DG_SvcRoleGroup
 
@@ -999,8 +999,8 @@ AL AG_Managed Resources_OU_FullCtrl
     $del_DL_SrvOUGroup = "$($del_DomainLocal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($groupSub.split(",")[0])"
     $del_DG_SrvOUGroup = "$($del_DomainGlobal)OU_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($groupSub.split(",")[0])"
 
-    try{New-ADGroup $del_DL_SrvOUGroup –groupscope DomainLocal -Path $adTasksDestination -Description $del_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
-    try{New-ADGroup $del_DG_SrvOUGroup –groupscope Global -Path $adTasksDestination -Description $del_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+    try{New-ADGroup $del_DL_SrvOUGroup -groupscope DomainLocal -Path $adTasksDestination -Description $del_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+    try{New-ADGroup $del_DG_SrvOUGroup -groupscope Global -Path $adTasksDestination -Description $del_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
     
     Add-ADGroupMember $del_DL_SrvOUGroup $del_DG_SrvOUGroup
     Add-ADGroupMember $del_DL_SrvOUGroup $del_DL_SvcRoleGroup
@@ -1039,19 +1039,19 @@ AL AG_Managed Resources_OU_FullCtrl
         $del_DG_GPOGroupModify = "$($del_DomainGlobal)GPO_$($ouOrgName)_$($SvcResTrun)_$($ouCompItem)_$($ouSrvResOU)_$($del_GPO_Modify_ACL.split(",")[0])"
    
         #Restriced Group 
-        try{New-ADGroup $del_DL_RGGroupNameAdmin –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
-        try{New-ADGroup $del_DG_RGGroupNameAdmin –groupscope Global -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+        try{New-ADGroup $del_DL_RGGroupNameAdmin -groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+        try{New-ADGroup $del_DG_RGGroupNameAdmin -groupscope Global -Path $adTasksDestination -Description $del_RG_Admin_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
         Add-ADGroupMember $del_DL_RGGroupNameAdmin $del_DG_RGGroupNameAdmin
         Add-ADGroupMember $del_DL_RGGroupNameAdmin $del_DL_SvcRoleGroup
 
-        try{New-ADGroup $del_DL_RGGroupNameUser –groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
-        try{New-ADGroup $del_DG_RGGroupNameUser –groupscope Global -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+        try{New-ADGroup $del_DL_RGGroupNameUser -groupscope DomainLocal -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+        try{New-ADGroup $del_DG_RGGroupNameUser -groupscope Global -Path $adTasksDestination -Description $del_RG_User_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
         Add-ADGroupMember $del_DL_RGGroupNameUser $del_DG_RGGroupNameUser
         #Add-ADGroupMember $del_DL_SvcRoleGroup $del_DL_RGGroupNameUser
                 
         #GPO Modify
-        try{New-ADGroup $del_DL_GPOGroupModify –groupscope DomainLocal -Path $adTasksDestination -Description $del_GPO_Modify_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
-        try{New-ADGroup $del_DG_GPOGroupModify –groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+        try{New-ADGroup $del_DL_GPOGroupModify -groupscope DomainLocal -Path $adTasksDestination -Description $del_GPO_Modify_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
+        try{New-ADGroup $del_DG_GPOGroupModify -groupscope Global -Path $adTasksDestination -Description $del_GPO_Modify_Description}catch{Write-Host "Group exists" -ForegroundColor DarkGreen}
         Add-ADGroupMember $del_DL_GPOGroupModify $del_DG_GPOGroupModify
         Add-ADGroupMember $del_DL_GPOGroupModify $del_DL_SvcRoleGroup
 
