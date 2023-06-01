@@ -1,4 +1,4 @@
-<#-----------------------------
+﻿<#-----------------------------
 Overview.
     Deploy multiple Domain Controllers and a new Forest from the JSON file input
     
@@ -28,8 +28,13 @@ Version.
 230512.1 - OU structure from JSON (CreateOU)
 230513.1 - New OU added for basic structure
 230514.1 - New OU Functions
-230516.1 - New Groups for Restricted Groups, GPO Delegation
-230516.2 - Create new GPO and assigned Admin and User Restricted Groups in to URA
+230515.1 - New Groups for Restricted Groups, GPO Delegation
+230515.2 - Create new GPO and assigned Admin and User Restricted Groups in to URA
+230516.1 - Fixed issue with nesting groups
+230518.1 - Group character length exceeded, so adding truncating of names
+230519.1 - Added Write-hosts - Support and out to screen what is creating
+230519.2 - Fixed issues with Service and Management Resouces OU full delegation not working - renamed to svcRes and MgmtRes and broke if statement
+230520.1 - Delegation of Service\Client Sub management OUs
 
 -----------------------------#>
 
