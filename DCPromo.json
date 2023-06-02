@@ -51,7 +51,7 @@
         },
        "OU":
        {
-        "Tier1":
+        "Organisation1":
             {
             "Name":"Member Servers",
             "Path":"Root",
@@ -73,7 +73,7 @@
                     "URA,Group"
                 ]
             },
-        "Tier2":
+        "Organisation2":
             {
             "Name":"User Services",
             "Path":"Root",
