@@ -56,7 +56,7 @@
             "Name":"Member Servers",
             "Path":"Root",
             "Type":"Server",
-            "Protect":"false",
+            "Protect":"true",
             "ManagementOU":"Managed Resources,Service Resources",
             "ManagedResources":
                 [
@@ -78,7 +78,7 @@
             "Name":"User Services",
             "Path":"Root",
             "Type":"Clients",
-            "Protect":"false",
+            "Protect":"true",
             "ManagementOU":"Managed Resources,Service Resources",
             "ManagedResources":
                 [
