@@ -1,0 +1,116 @@
+{
+    "FirstDC":
+        {
+        "PDCName":"EC2AMAZ-EHQP7Q3",
+        "PDCRole":"true",
+        "IPAddress":"10.0.2.69",
+        "Subnet":"255.255.255.0",
+        "DefaultGateway":"10.0.2.1",
+        "CreateDnsDelegation":"false", 
+        "DatabasePath":"c:\\Windows\\NTDS", 
+        "DomainMode":"WinThreshold", 
+        "DomainName":"testdom.loc", 
+        "DomainNetbiosName":"TESTDOM", 
+        "ForestMode":"WinThreshold", 
+        "InstallDns":"true", 
+        "LogPath":"c:\\Windows\\NTDS", 
+        "NoRebootOnCompletion":"false", 
+        "SysvolPath":"c:\\Windows\\SYSVOL", 
+        "Force":"true",
+        "DRSM":"Recovery1234",
+        "DomAcct":"Administrator",
+        "DomPwd":"Password1234",
+        "PromptPw":"false"
+        },
+    "SubDCs":
+        {
+        "PDCRole":"false",
+        "NoGlobalCatalog":"false",
+        "Credential":"Password1234",
+        "CriticalReplicationOnly":"false",
+        "Networking":[
+            {
+                "DCName":"DC02",
+                "PDCRole":"false",
+                "IPAddress":"10.0.0.2",
+                "Subnet":"255.255.255.0",
+                "DefaultGateway":"10.0.0.254", 
+                "SiteName":"Default-First-Site-Name",
+                "DRSM":"Password1234"      
+            },
+            {
+                "DCName":"DC03",
+                "PDCRole":"false",
+                "IPAddress":"10.0.0.3",
+                "Subnet":"255.255.255.0",
+                "DefaultGateway":"10.0.0.254",
+                "SiteName":"Default-First-Site-Name",
+                "DRSM":"Password1234"
+            }  
+                  ]
+        },
+       "OU":
+       {
+      "Organisation0":
+            {
+            "Name":"Admin Resources",
+            "Path":"Root",
+            "Type":"Admin",
+            "Protect":"false",
+            "AdministrativeOU":"Administrative Resources",
+            "AdministrativeResources":
+                [
+                    "AD Roles,Group",
+                    "AD Tasks,Group",
+                    "Admin Accounts,User"
+                ]
+            },
+        "Organisation1":
+            {
+            "Name":"Member Servers",
+            "Path":"Root",
+            "Type":"Server",
+            "Protect":"false",
+            "AdministrativeOU":"Service Infrastructure",
+            "AdministrativeResources":
+                [
+                    "AD Roles,Group",
+                    "AD Tasks,Group",
+                    "Admin Accounts,User"
+                ],
+            "AppResources":"Certificates,MOSS,DevOps,SQL,Oracle,SCCM,SCOM,File Server,Exchange",
+            "ServiceResources":
+                [
+                    "Servers,Computer",
+                    "Application Groups,Group",
+                    "Service Accounts,SvcAccts",
+                    "URA,Group"
+                ]
+            },
+        "Organisation2":
+            {
+            "Name":"User Services",
+            "Path":"Root",
+            "Type":"Clients",
+            "Protect":"false",
+            "AdministrativeOU":"Service Infrastructure",
+            "AdministrativeResources":
+                [
+                    "AD Roles,Group",
+                    "AD Tasks,Group",
+                    "Admin Accounts,User"
+                ],
+            "AppResources":"Clients",
+            "ServiceResources":
+                [
+                    "Workstations,Computer",
+                    "Groups,Group",
+                    "Accounts,User",
+                    "URA,Group"
+                ]
+            }
+        }
+    }
+    
+    
+    
