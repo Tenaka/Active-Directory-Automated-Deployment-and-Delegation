@@ -6,7 +6,7 @@ Not fully tested and should not be deployed into Live or rerun over the top of a
 
 Overview.
     Deploy multiple Domain Controllers and a new Forest from the JSON file input.
-    First DC (PDC) will auto-start, logon and then deploy an delegated OU structure.
+    First DC (PDC) will auto-start, logon and then deploy a delegated OU structure.
     
 Description.
     This is script 1 of 4
@@ -25,7 +25,10 @@ Description.
             Resolves the Administrator account for the next scheduled task
 
     4 - CreateOU.ps1
-            Deploys the Domain configutation eg OU and delgation based on:
-            https://github.com/Tenaka/AD-Delegation
-           
+            Deploys the Domain configuration eg OU and delegation based on:
+            Creates tiered OU structure for Member Servers and Clients
+            Creates 3 levels of GPO Restricted Groups and User Rights Assignments
+            Creates nested AD Groups and delegates OU's as Tasks and Roles
+            Imports Microsoft SCM Group Policies for Office, Edge, Server, Domain Controller and Clients
+            Assign SCM policies against target OU
        
