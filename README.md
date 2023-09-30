@@ -8,9 +8,6 @@ Overview.
     Deploy multiple Domain Controllers and a new Forest from the JSON file input.
     First DC (PDC) will auto-start, logon and then deploy a delegated OU structure.
     
-Description.
-    This is script 1 of 4
-
     They execute via scheduled tasks in the following order:
 
     1 - DCPromo.ps1
@@ -25,10 +22,11 @@ Description.
             Resolves the Administrator account for the next scheduled task
 
     4 - CreateOU.ps1
-            Deploys the Domain configuration eg OU and delegation based on:
+            Deploys the Domain configuration eg OU and delegation.
             Creates tiered OU structure for Member Servers and Clients
             Creates 3 levels of GPO Restricted Groups and User Rights Assignments
             Creates nested AD Groups and delegates OU's as Tasks and Roles
+            Imports ADMX files.
             Imports Microsoft SCM Group Policies for Office, Edge, Server, Domain Controller and Clients
             Assign SCM policies against target OU
        
