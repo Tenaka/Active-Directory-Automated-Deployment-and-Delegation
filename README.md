@@ -1,4 +1,4 @@
-# AD-DCPromo_OUDelegation
+# Active-Directory-Automated-Deployment-and-Delegation
 
 This is for rapidly deploying Active Directory and a full OU delegation model based on input from JSON.
 
