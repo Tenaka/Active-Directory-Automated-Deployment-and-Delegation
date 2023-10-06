@@ -28,6 +28,7 @@ Version.
 
 ToDo.
 Add further if statements to validate if an imported gpo is already linked to the target OU
+Add checks for when the hostname in json file doesnt match that of the target
 
 -----------------------------#>
 
@@ -57,6 +58,11 @@ Declare variable for Present Working Directory for either PS or ISE
     {
         $Pwdir = split-path -parent $MyInvocation.MyCommand.Path
     }
+
+    #Expand GPO and ADMX zip files to root of floder
+    if ("$($Pwdir)\ADMXTemplates.zip"){Expand-Archive "$($Pwdir)\ADMXTemplates.zip" -DestinationPath $Pwdir}
+    if ("$($Pwdir)\GPOs.zip"){Expand-Archive "$($Pwdir)\GPOs.zip" -DestinationPath $Pwdir}
+   
 
 <#-----------------------------
 
@@ -88,15 +94,15 @@ if ($env:COMPUTERNAME -eq $PDCEmulator)
         #paths to scripts referenced by the scheduled tasks
         $schInitial = "$($Pwdir)\$($dcSchInit)"
         $tpschInitial = Test-Path $schInitial
-        if ($tpschInitial -eq $true){Write-host "$schInitial is present"}else{write-host "$schInitial is missing" -ForegroundColor Red | write-host "blah" } #pause
+        if ($tpschInitial -eq $true){Write-host "$schInitial is present"}else{write-host "$schInitial is missing" -ForegroundColor Red | pause }
         
         $schInitial2 = "$($Pwdir)\$($dcSchAdmin)"
         $tpschInitial2 = Test-Path $schInitial2
-        if ($tpschInitial -eq $true){Write-host "$schInitial2 is present"}else{write-host "$schInitial2 is missing" -ForegroundColor Red | write-host "blah" } #pause
+        if ($tpschInitial -eq $true){Write-host "$schInitial2 is present"}else{write-host "$schInitial2 is missing" -ForegroundColor Red | Red | pause }
     
         $schOUDeploy = "$($Pwdir)\$($ouDeployment)"
         $tpschOUDeploy = Test-Path $schOUDeploy
-        if ($tpschOUDeploy -eq $true){Write-host "$schOUDeploy is present"}else{write-host "$schOUDeploy is missing" -ForegroundColor Red | write-host "blah" } #pause
+        if ($tpschOUDeploy -eq $true){Write-host "$schOUDeploy is present"}else{write-host "$schOUDeploy is missing" -ForegroundColor Red | Red | pause }
 
         $gtDCPromoJ = Get-Content -raw -Path "$($Pwdir)\$($dcPromoJson)" | ConvertFrom-Json -ErrorAction Stop
         [array]$gtSubnet = Import-Csv -Path "$($Pwdir)\$($dcPromoSubnet)"
@@ -2233,7 +2239,7 @@ if ($env:COMPUTERNAME -eq $PDCEmulator)
 
                 #Administrative Resource sub-OUs for ADRoles, ADTasks, URA and AdminAccounts
                 $ouAdminRes = $ou.AdministrativeResources
-                if ($ouAdminRes-ne $null){Write-host " $ouAdminRes is present"}else{write-host "$ou.AdministrativeResources is Null" -ForegroundColor Red | pause }
+                if ($ouAdminRes -ne $null){Write-host " $ouAdminRes is present"}else{write-host "$ou.AdministrativeResources is Null" -ForegroundColor Red | pause }
 
                 #Define Servers or Client or Server and Object Type of Computer
                 $ouAppResources = $ou.AppResources

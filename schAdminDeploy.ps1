@@ -117,14 +117,14 @@ Set Autologon for the PDC - Risk password is writtent to Registry in the clear
         $allowBatt = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries 
         $trigger = New-ScheduledTaskTrigger -AtLogOn -User "$($PDC_Netbios)\$($Dom_Admin)"
         $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-executionPolicy bypass -file $schOUDeploy"
-        $principal = New-ScheduledTaskPrincipal -LogonType Interactive -UserId "$($PDC_Netbios)\$($Dom_Admin)"  -RunLevel Highest 
+        $principal = New-ScheduledTaskPrincipal -LogonType Interactive -UserId "$($PDC_Netbios)\$($Dom_Admin)" -RunLevel Highest 
         Register-ScheduledTask -TaskName $Schedule -Trigger $trigger -Settings $allowBatt -Action $action -Principal $principal 
 
         sleep 5
 
         Disable-ScheduledTask -TaskName "schAdminReboot"
         #Disable Server Manager as logon
-        Disable-ScheduledTask -TaskName "\Microsoft\Windows\Server Manager\ServerManager"
+        #Disable-ScheduledTask -TaskName "\Microsoft\Windows\Server Manager\ServerManager"
 
 <#-----------------------------
 

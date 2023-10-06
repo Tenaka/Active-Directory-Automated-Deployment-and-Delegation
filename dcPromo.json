@@ -1,7 +1,7 @@
 {
     "FirstDC":
         {
-        "PDCName":"DC01",
+        "PDCName":"EC2AMAZ-EHQP7Q3",
         "PDCRole":"true",
         "IPAddress":"10.0.2.69",
         "Subnet":"255.255.255.0",
@@ -49,7 +49,7 @@
             }  
                   ]
         },
-       "OU":
+    "OU":
        {
       "Organisation0":
             {
