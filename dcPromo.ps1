@@ -23,6 +23,7 @@ Description.
 
 Version.
 230921.1 - workable scripts 
+231009.1 - moved additional DC statement under foreach($lnDC in $DC_Details).
 
 -----------------------------#>
 
@@ -271,115 +272,114 @@ Additional Domain Controllers
                         $DC_Route = $lnDC.DefaultGateway
                         $AD_Site = $lnDC.SiteName
                         $DC_DRSM = $lnDC.DRSM
+            <#-----------------------------
+
+            Set Networking and DNS Adapter Settings
+
+            -----------------------------#>
+
+                    #Set Network Properties
+                    $gtNetAdpap = Get-NetAdapter | where {$_.Status -eq "up"}
+                    $intAlias = $gtNetAdpap.InterfaceAlias
+
+                    $gtNetIPConfig = Get-NetIPConfiguration -InterfaceAlias $gtNetAdpap.Name
+                    $IPAddress = $gtNetIPConfig.IPv4Address.ipaddress
+                    $DHCPRouter = $gtNetIPConfig.IPv4DefaultGateway.nexthop
+                    $dnsAddress = $gtNetIPConfig.dnsserver.serveraddresses
+        
+                    #Test if current IP is the same JSON, if not remove all properties and reset
+                    if ($IPAddress -ne $DC_IP -and $dnsAddress -ne $PDC_IP)
+                        {
+                            #Remove current IP Address and router
+                            $gtNetIPConfig | Remove-NetIPAddress -Confirm:$false 
+                            $gtNetIPConfig.IPv4DefaultGateway |Remove-NetRoute -Confirm:$false -ErrorAction SilentlyContinue
+                            Set-DnsClientServerAddress -InterfaceAlias $intAlias -ResetServerAddresses
+
+                            #Subnet to CIDR conversion table 
+                            foreach($lnSubnet in $gtSubnet)
+                            {
+                                if ($lnSubnet.mask -cmatch $DC_Subnet)
+                                    {
+                                        $prefix = $lnSubnet.cidr
+                                    }
+                            }
+        
+                            #Set new IP Address specified from json file
+                            New-NetIPAddress -InterfaceAlias $gtNetAdpap.Name   `
+                                     -IPAddress $DC_IP                          `
+                                     -AddressFamily IPv4                        `
+                                     -PrefixLength $prefix                  `
+                                     -DefaultGateway $DC_Route
+        
+                            #Set DNS Server                 
+                            Set-DnsClientServerAddress -ServerAddresses $PDC_IP -InterfaceAlias $intAlias
+                        }
+ 
+            <#-----------------------------
+
+            Ask some questions or comment them out to take default values from json
+            JSON config @ $Dom_PromptPw = $gtDCPromoJ.FirstDC.PromptPw will prompt for new passwords if set to TRUE, otherwise will use the password provided
+
+            -----------------------------#>   
+  
+                    #Gives option to use the Domain Administrator and password provided in clear text in the json file or prompt to use a different password
+                    if ($Dom_PromptPw -eq "true")
+                        {
+                        $rdDomPwd = Read-Host "Use the supplied Domain Admin and Password or update....Y update or another key to exit"
+                        if ($rdDomPwd -eq "Y")
+                            {
+                                $domcreds = Read-Host "Enter Domain Admin Credentials eg 'Administrator,Password'... with a comma separator"
+
+                                $Dom_Admin = $domcreds.split(",")[0]
+                                $Dom_Passwrd = $domcreds.split(",")[1] 
+                            }
+                        }
+
+            <#-----------------------------
+
+            Create Secure credentials to be used in DCPROM'ing subsequent DC's
+
+            -----------------------------#>  
+
+                    $secPasswd = ConvertTo-SecureString $Dom_Passwrd -AsPlainText -Force
+                    $domcred = New-Object System.Management.Automation.PSCredential ("$($PDC_Netbios)\$($Dom_Admin)", $secPasswd)    
+    
+                    #Gives option to use the default DRSM password provided in clear text in the json file or prompt to use a different password
+                    if ($Dom_PromptPw -eq "true")
+                        {        
+                        $rdDrsm = Read-Host "Take default password for DRSM or update....Y update or another key to exit"
+                        if ($rdDrsm -eq "Y")
+                            {
+                                $DC_DRSM = Read-Host "Enter the new DRSM password"
+                            }
+                        #Hash the above DRSM lines so there is no prompt for password change and the clear text password is taken from the Json file
+                        }
+                    #convert the DRSM password to a secure string
+                    $drsmSecurePassword = ConvertTo-SecureString -AsPlainText $DC_DRSM -Force
+
+            <#-----------------------------
+
+            DCPROMO of Addtional DC's
+
+            -----------------------------#>  
+
+                    Install-ADDSDomainController             `
+                    -NoGlobalCatalog:$DC_NoGC                `
+                    -CreateDnsDelegation:$PDC_CreateDNSDele  `
+                    -Credential (Get-Credential $domcred)    `
+                    -CriticalReplicationOnly:$DC_CriticalRep `
+                    -DatabasePath $PDC_DBPath                `
+                    -DomainName $PDC_DomainName              `
+                    -InstallDns:$PDC_InstallDNS              `
+                    -LogPath $PDC_LogPath                    `
+                    -NoRebootOnCompletion:$false             `
+                    -SiteName "Default-First-Site-Name"      `
+                    -SysvolPath $PDC_SysVolPath              `
+                    -Force:$PDC_Force                        `
+                    -SafeModeAdministratorPassword $drsmSecurePassword 
+
                     }
             }
-
-<#-----------------------------
-
-Set Networking and DNS Adapter Settings
-
------------------------------#>
-
-        #Set Network Properties
-        $gtNetAdpap = Get-NetAdapter | where {$_.Status -eq "up"}
-        $intAlias = $gtNetAdpap.InterfaceAlias
-
-        $gtNetIPConfig = Get-NetIPConfiguration -InterfaceAlias $gtNetAdpap.Name
-        $IPAddress = $gtNetIPConfig.IPv4Address.ipaddress
-        $DHCPRouter = $gtNetIPConfig.IPv4DefaultGateway.nexthop
-        $dnsAddress = $gtNetIPConfig.dnsserver.serveraddresses
-        
-        #Test if current IP is the same JSON, if not remove all properties and reset
-        if ($IPAddress -ne $DC_IP -and $dnsAddress -ne $PDC_IP)
-            {
-                #Remove current IP Address and router
-                $gtNetIPConfig | Remove-NetIPAddress -Confirm:$false 
-                $gtNetIPConfig.IPv4DefaultGateway |Remove-NetRoute -Confirm:$false -ErrorAction SilentlyContinue
-                Set-DnsClientServerAddress -InterfaceAlias $intAlias -ResetServerAddresses
-
-                #Subnet to CIDR conversion table 
-                foreach($lnSubnet in $gtSubnet)
-                {
-                    if ($lnSubnet.mask -cmatch $DC_Subnet)
-                        {
-                            $prefix = $lnSubnet.cidr
-                        }
-                }
-        
-                #Set new IP Address specified from json file
-                New-NetIPAddress -InterfaceAlias $gtNetAdpap.Name   `
-                         -IPAddress $DC_IP                          `
-                         -AddressFamily IPv4                        `
-                         -PrefixLength $prefix                  `
-                         -DefaultGateway $DC_Route
-        
-                #Set DNS Server                 
-                Set-DnsClientServerAddress -ServerAddresses $PDC_IP -InterfaceAlias $intAlias
-            }
- 
-<#-----------------------------
-
-Ask some questions or comment them out to take default values from json
-JSON config @ $Dom_PromptPw = $gtDCPromoJ.FirstDC.PromptPw will prompt for new passwords if set to TRUE, otherwise will use the password provided
-
------------------------------#>   
-  
-        #Gives option to use the Domain Administrator and password provided in clear text in the json file or prompt to use a different password
-        if ($Dom_PromptPw -eq "true")
-            {
-            $rdDomPwd = Read-Host "Use the supplied Domain Admin and Password or update....Y update or another key to exit"
-            if ($rdDomPwd -eq "Y")
-                {
-                    $domcreds = Read-Host "Enter Domain Admin Credentials eg 'Administrator,Password'... with a comma separator"
-
-                    $Dom_Admin = $domcreds.split(",")[0]
-                    $Dom_Passwrd = $domcreds.split(",")[1] 
-                }
-            }
-
-<#-----------------------------
-
-Create Secure credentials to be used in DCPROM'ing subsequent DC's
-
------------------------------#>  
-
-        $secPasswd = ConvertTo-SecureString $Dom_Passwrd -AsPlainText -Force
-        $domcred = New-Object System.Management.Automation.PSCredential ("$($PDC_Netbios)\$($Dom_Admin)", $secPasswd)    
-    
-        #Gives option to use the default DRSM password provided in clear text in the json file or prompt to use a different password
-        if ($Dom_PromptPw -eq "true")
-            {        
-            $rdDrsm = Read-Host "Take default password for DRSM or update....Y update or another key to exit"
-            if ($rdDrsm -eq "Y")
-                {
-                    $DC_DRSM = Read-Host "Enter the new DRSM password"
-                }
-            #Hash the above DRSM lines so there is no prompt for password change and the clear text password is taken from the Json file
-            }
-        #convert the DRSM password to a secure string
-        $drsmSecurePassword = ConvertTo-SecureString -AsPlainText $DC_DRSM -Force
-
-<#-----------------------------
-
-DCPROMO of Addtional DC's
-
------------------------------#>  
-
-        Install-ADDSDomainController             `
-        -NoGlobalCatalog:$DC_NoGC                `
-        -CreateDnsDelegation:$PDC_CreateDNSDele  `
-        -Credential (Get-Credential $domcred)    `
-        -CriticalReplicationOnly:$DC_CriticalRep `
-        -DatabasePath $PDC_DBPath                `
-        -DomainName $PDC_DomainName              `
-        -InstallDns:$PDC_InstallDNS              `
-        -LogPath $PDC_LogPath                    `
-        -NoRebootOnCompletion:$false             `
-        -SiteName "Default-First-Site-Name"      `
-        -SysvolPath $PDC_SysVolPath              `
-        -Force:$PDC_Force                        `
-        -SafeModeAdministratorPassword $drsmSecurePassword 
-    
     }
 }
 
